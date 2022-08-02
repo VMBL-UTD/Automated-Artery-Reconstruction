@@ -1,0 +1,13 @@
+# WIP files
+*.asv
+
+# MATLAB Drive files
+*.MATLABDriveTag
+
+# Dont ignore templates
+*.ini
+!*.template.ini
+
+# Temp folder
+temp/
+feb/
