@@ -10,8 +10,8 @@ outlet_vecs.xyz = [layers(1).trans;layers(end).trans];
 % Create daughter branches if necessary
 if isbranched
     [surfs] = separateMeshSurfacesNew(F,V,outlet_vecs.xyz,outlet_vecs.uvw,0.1);
-    [branch_groups] = getBranchGroups(F, V, layers, surfs, mesh_config.branch_ideal);
-    [F,V] = loftBranchGroups(F, V, branch_groups, mesh_config.branch_taper);
+    [branch_groups] = getBranchGroups(F, V, layers, surfs, mesh_config.mesh.branch_ideal);
+    [F,V] = loftBranchGroups(F, V, branch_groups, mesh_config.mesh.branch_taper);
 
     % Update outlet vectors
     for i=1:size(branch_groups,2)
