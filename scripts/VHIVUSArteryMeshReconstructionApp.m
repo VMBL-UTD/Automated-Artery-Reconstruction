@@ -1,15 +1,12 @@
-classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
+classdef VHIVUSArteryMeshReconstruction < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
         AutomatedVHIVUS3DArteryReconstructionLabel  matlab.ui.control.Label
-        Image                           matlab.ui.control.Image
-        Image3                          matlab.ui.control.Image
         MeshingFEBioPropertyManagerPanel  matlab.ui.container.Panel
         TabGroup                        matlab.ui.container.TabGroup
-        VHIVUSMeshingTab                matlab.ui.container.Tab
-        GridLayout41                    matlab.ui.container.GridLayout
+        VHIVUSTab                       matlab.ui.container.Tab
         CenterlinePanel                 matlab.ui.container.Panel
         GridLayout33                    matlab.ui.container.GridLayout
         GridLayout34                    matlab.ui.container.GridLayout
@@ -43,6 +40,37 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         GridLayout50                    matlab.ui.container.GridLayout
         SleeveThicknessmmEditFieldLabel  matlab.ui.control.Label
         SleeveThicknessmmEditField      matlab.ui.control.NumericEditField
+        GridLayout58                    matlab.ui.container.GridLayout
+        ArterialLabel                   matlab.ui.control.Label
+        ColorPickerButton               matlab.ui.control.Button
+        B255Label                       matlab.ui.control.Label
+        R255Label                       matlab.ui.control.Label
+        G255Label                       matlab.ui.control.Label
+        GridLayout59                    matlab.ui.container.GridLayout
+        FibroticLabel                   matlab.ui.control.Label
+        ColorPickerButton_2             matlab.ui.control.Button
+        R255Label_2                     matlab.ui.control.Label
+        G255Label_2                     matlab.ui.control.Label
+        B255Label_2                     matlab.ui.control.Label
+        GridLayout60                    matlab.ui.container.GridLayout
+        FibrofattyLabel                 matlab.ui.control.Label
+        ColorPickerButton_3             matlab.ui.control.Button
+        R255Label_6                     matlab.ui.control.Label
+        G255Label_3                     matlab.ui.control.Label
+        B255Label_3                     matlab.ui.control.Label
+        GridLayout61                    matlab.ui.container.GridLayout
+        NecroticLabel                   matlab.ui.control.Label
+        ColorPickerButton_4             matlab.ui.control.Button
+        R255Label_7                     matlab.ui.control.Label
+        G255Label_4                     matlab.ui.control.Label
+        B255Label_4                     matlab.ui.control.Label
+        GridLayout62                    matlab.ui.container.GridLayout
+        CalciumLabel                    matlab.ui.control.Label
+        ColorPickerButton_5             matlab.ui.control.Button
+        R255Label_8                     matlab.ui.control.Label
+        G255Label_5                     matlab.ui.control.Label
+        B255Label_5                     matlab.ui.control.Label
+        MeshingTab                      matlab.ui.container.Tab
         MeshingPanel                    matlab.ui.container.Panel
         GridLayout2                     matlab.ui.container.GridLayout
         GridLayout4                     matlab.ui.container.GridLayout
@@ -61,6 +89,20 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         GridLayout47                    matlab.ui.container.GridLayout
         GenerateMeshButton              matlab.ui.control.Button
         ClearMeshDataButton             matlab.ui.control.Button
+        GridLayout63                    matlab.ui.container.GridLayout
+        SmoothingLambdaEditFieldLabel   matlab.ui.control.Label
+        SmoothingLambdaEditField        matlab.ui.control.NumericEditField
+        GridLayout64                    matlab.ui.container.GridLayout
+        SmoothingStepsEditFieldLabel    matlab.ui.control.Label
+        SmoothingStepsEditField         matlab.ui.control.NumericEditField
+        MaterialAssignmentPanel         matlab.ui.container.Panel
+        GridLayout65                    matlab.ui.container.GridLayout
+        GridLayout66                    matlab.ui.container.GridLayout
+        MethodListBoxLabel              matlab.ui.control.Label
+        MethodListBox                   matlab.ui.control.ListBox
+        GridLayout67                    matlab.ui.container.GridLayout
+        AssignMaterialsButton           matlab.ui.control.Button
+        ClearAssignedDataButton         matlab.ui.control.Button
         MaterialsTab                    matlab.ui.container.Tab
         GridLayout42                    matlab.ui.container.GridLayout
         CalciumPanel                    matlab.ui.container.Panel
@@ -175,13 +217,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         SettingsLabel                   matlab.ui.control.Label
         UpdateFigureButton              matlab.ui.control.Button
         ClearFigureButton               matlab.ui.control.Button
-        UniversityofTexasatDallasVascularMechanobiologyLabLabel  matlab.ui.control.Label
         Label                           matlab.ui.control.Label
         ERRORPanel                      matlab.ui.container.Panel
         GridLayout48                    matlab.ui.container.GridLayout
         ERRORMESSAGELabel               matlab.ui.control.Label
         GridLayout49                    matlab.ui.container.GridLayout
         ReturnButton                    matlab.ui.control.Button
+        Image                           matlab.ui.control.Image
     end
 
     
@@ -196,8 +238,8 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         is_branched;
         
         % Config Structs
-        mesh_config = meshConfigBase();
-        feb_config = febConfigBase();
+        mesh_config;
+        feb_config;
         
         % Plotting
         cline_loaded = false;
@@ -230,11 +272,11 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.MinVHIVUSIDEditField.Value = app.mesh_config.ivus.min;
             app.MaxVHIVUSIDEditField.Value = app.mesh_config.ivus.max;
             app.PixelmmScaleFactorEditField.Value = app.mesh_config.ivus.pixel_scale;
+            app.SleeveThicknessmmEditField.Value = app.mesh_config.ivus.sleeve_thick;
             app.ParseImagesButton.Enable = 1;
             
             % Update VH-IVUS/Meshing tab - Meshing Properties pane
             app.MeshResolutionmmEditField.Value = app.mesh_config.mesh.resample;
-            app.SleeveThicknessmmEditField.Value = app.mesh_config.mesh.sleeve_thick;
             if app.mesh_config.mesh.branch_ideal == 1
                 app.CircularButton.Value = 1;
                 app.NaturalButton.Value = 0;
@@ -322,6 +364,42 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         function enableAppActions(app)
             app.Label.Visible = false;
         end
+        
+        function setVHIVUSColors(app)
+            % Update R Value
+            app.R255Label.Text   = strcat('R',int2str(app.mesh_config.ivus.artery.c(1)));
+            app.R255Label_2.Text = strcat('R',int2str(app.mesh_config.ivus.fibrotic.c(1)));
+            app.R255Label_6.Text = strcat('R',int2str(app.mesh_config.ivus.fibrofatty.c(1)));
+            app.R255Label_7.Text = strcat('R',int2str(app.mesh_config.ivus.necrotic.c(1)));
+            app.R255Label_8.Text = strcat('R',int2str(app.mesh_config.ivus.calcium.c(1)));
+            
+            % Update G Value
+            app.G255Label.Text   = strcat('G',int2str(app.mesh_config.ivus.artery.c(2)));
+            app.G255Label_2.Text = strcat('G',int2str(app.mesh_config.ivus.fibrotic.c(2)));
+            app.G255Label_3.Text = strcat('G',int2str(app.mesh_config.ivus.fibrofatty.c(2)));
+            app.G255Label_4.Text = strcat('G',int2str(app.mesh_config.ivus.necrotic.c(2)));
+            app.G255Label_5.Text = strcat('G',int2str(app.mesh_config.ivus.calcium.c(2)));
+            
+            % Update B Value
+            app.B255Label.Text   = strcat('B',int2str(app.mesh_config.ivus.artery.c(3)));
+            app.B255Label_2.Text = strcat('B',int2str(app.mesh_config.ivus.fibrotic.c(3)));
+            app.B255Label_3.Text = strcat('B',int2str(app.mesh_config.ivus.fibrofatty.c(3)));
+            app.B255Label_4.Text = strcat('B',int2str(app.mesh_config.ivus.necrotic.c(3)));
+            app.B255Label_5.Text = strcat('B',int2str(app.mesh_config.ivus.calcium.c(3)));
+            
+            app.PlotColorLamp.Color = app.mesh_config.ivus.calcium.c/255;
+            app.PlotColorLamp_4.Color = app.mesh_config.ivus.fibrotic.c/255;
+            app.PlotColorLamp_3.Color = app.mesh_config.ivus.fibrofatty.c/255;
+            app.PlotColorLamp_2.Color = app.mesh_config.ivus.necrotic.c/255;
+            app.PlotColorLamp_5.Color = app.mesh_config.ivus.artery.c/255;
+        end
+        
+        
+        function displayErrorMessage(app,e)
+            app.disableAppActions();
+            app.ERRORPanel.Visible = true;
+            app.ERRORMESSAGELabel.Text = e.message;
+        end
     end
     
 
@@ -334,7 +412,12 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             clc;
             
             app.fig = figure;
-
+            
+            app.mesh_config = meshConfigBase();
+            app.feb_config = febConfigBase();
+            
+            app.setVHIVUSColors();
+            
         end
 
         % Button pushed function: SelectFromFileExplorerButton_3
@@ -358,9 +441,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
                     app.Lamp.Color = [1,0,0];
                 end
             catch e
-                app.disableAppActions();
-                app.ERRORPanel.Visible = true;
-                app.ERRORMESSAGELabel.Text = e.message;
+                app.displayErrorMessage(e)
             end
         end
 
@@ -369,25 +450,49 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Disable input fields
             app.MeshResolutionmmEditField.Enable = false;
             app.SleeveThicknessmmEditField.Enable = false;
+            app.SmoothingLambdaEditField.Enable = false;
             app.CircularButton.Enable = false;
             app.NaturalButton.Enable = false;
             app.YesButton.Enable = false;
             app.NoButton.Enable = false;
+            app.SmoothingStepsEditField.Enable = false;
             
             % Generate mesh
-            [app.F,app.V,app.tets,app.outlet_vecs] = generateSurfaceMesh(app.layers,app.mesh_config,app.is_branched);
-            app.SurfaceMeshButton.Enable = true;
+            try
+                [app.F,app.V,app.tets,app.outlet_vecs] = generateSurfaceMesh(app.layers,app.mesh_config,app.is_branched);
+                app.SurfaceMeshButton.Enable = true;
+                
+                % Enable Clear button
+                app.ClearMeshDataButton.Enable = true;
+                app.GenerateMeshButton.Enable = false;
+                app.AssignMaterialsButton.Enable = true;
+                
+                if isfolder(app.FEBiofebSavePathEditField.Value)
+                    app.SaveFEBioFileButton.Enable = true;
+                end
+            catch e
+                app.displayErrorMessage(e);
+            end
+        end
+
+        % Button pushed function: AssignMaterialsButton
+        function AssignMaterialsButtonPushed(app, event)
+            % Disable input fields
+            app.AssignMaterialsButton.Enable = false;
+            app.ClearAssignedDataButton.Enable = true;
             
-            % Assign Materials
-            [app.tets] = assignMaterialsLayers(app.tets,app.layers);
-            app.VolumetricMeshButton.Enable = true;
-            
-            % Enable Clear button
-            app.ClearMeshDataButton.Enable = true;
-            app.GenerateMeshButton.Enable = false;
-            
-            if isfolder(app.FEBiofebSavePathEditField.Value)
+            try
+                if strcmp(app.MethodListBox.Value,"Axial Partition")
+                    % Assign Materials
+                    [app.tets] = assignMaterialsLayers(app.tets,app.layers);
+                else
+                    [app.tets] = assignMaterialsGeneric(app.tets,app.layers);
+                end
+                app.VolumetricMeshButton.Enable = true;
                 app.SaveFEBioFileButton.Enable = true;
+            catch e
+                app.tets.elementMaterialID = ones(size(app.tets.elementMaterialID))*-1;
+                app.displayErrorMessage(e);
             end
         end
 
@@ -412,8 +517,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
                     app.Lamp_2.Color = [1,0,0];
                 end
             catch e
-                app.ERRORPanel.Visible = true;
-                app.ERRORMESSAGELabel.Text = e.message;
+                app.displayErrorMessage(e);
             end
         end
 
@@ -438,8 +542,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
                     app.Lamp_3.Color = [1,0,0];
                 end
             catch e
-                app.ERRORPanel.Visible = true;
-                app.ERRORMESSAGELabel.Text = e.message;
+                app.displayErrorMessage(e);
             end
         end
 
@@ -447,76 +550,83 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         function LoadCenterlineButtonPushed(app, event)
             try
                 app.cline = getCenterline(app.mesh_config);
+                
+                % If centerline was successfully loaded
                 if ~isempty(app.cline)
-                    % Enable Clear and Plot buttons
+                    % Enable centerline clear and plot buttons
                     app.CenterlineButton.Enable = true;
                     app.ClearCenterlineDataButton.Enable = true;
+                    app.UpdateFigureButton.Enable = true;
                     
                     % Disable Centerline input fields
                     app.CurvedButton.Enable = false;
                     app.StraightButton.Enable = false;
                     app.CenterlineFilePathEditField.Enable = false;
                     app.LoadCenterlineButton.Enable = false;
+                    app.MinVHIVUSIDEditField.Enable = false;
+                    app.MaxVHIVUSIDEditField.Enable = false;
                 else
                     % Disable Clear and Plot Buttons if file load fails
                     app.CenterlineButton.Enable = false;
                     app.ClearCenterlineDataButton.Enable = false;
                     app.LoadCenterlineButton.Enable = true;
                 end
-                app.cline_loaded = true;
             catch e
-                app.cline_loaded = false;
-                app.disableAppActions();
-                app.ERRORPanel.Visible = true;
-                app.ERRORMESSAGELabel.Text = e.message;
+                app.dispplayErrorMessage(e);
             end
         end
 
         % Button pushed function: ParseImagesButton
         function ParseImagesButtonPushed(app, event)
-            % Check if we have a valid centerline
-            if ~isempty(app.cline)
-                
-                % Disable input fields
-                app.SleeveThicknessmmEditField.Enable = false;
-                app.VHIVUSDirectoryEditField.Enable = false;
-                app.MinVHIVUSIDEditField.Enable = false;
-                app.MaxVHIVUSIDEditField.Enable = false;
-                app.PixelmmScaleFactorEditField.Enable = false;
-                
-                try
-                    % Parse IVUS images
-                    [app.layers, app.is_branched] = getIVUSLayers(app.mesh_config, app.cline);
-                
-                catch e
+            try
+                % Check if we have a valid centerline
+                if ~isempty(app.cline)
+                    
+                    % Disable input fields
+                    app.SleeveThicknessmmEditField.Enable = false;
+                    app.VHIVUSDirectoryEditField.Enable = false;
+                    app.MinVHIVUSIDEditField.Enable = false;
+                    app.MaxVHIVUSIDEditField.Enable = false;
+                    app.PixelmmScaleFactorEditField.Enable = false;
+                    app.ParseImagesButton.Enable = false;
+                    
+                    try
+                        % Parse IVUS images
+                        [app.layers, app.is_branched] = getIVUSLayers(app.mesh_config, app.cline);
+                    
+                    catch e
+                        % Re-enable input fields
+                        app.SleeveThicknessmmEditField.Enable = true;
+                        app.VHIVUSDirectoryEditField.Enable = true;
+                        app.MinVHIVUSIDEditField.Enable = true;
+                        app.MaxVHIVUSIDEditField.Enable = true;
+                        app.PixelmmScaleFactorEditField.Enable = true;
+                        app.ParseImagesButton.Enable = true;
+                        return;
+                    end
+                    
+                    % Enable plotting and clear buttons
+                    app.VHIVUSDataButton.Enable = true;
+                    app.ClearImageDataButton.Enable = true;
+                    app.ParseImagesButton.Enable = false;
+                    
+                    % Enable mesh creation button
+                    app.GenerateMeshButton.Enable = true;
+                    
+                else
+                    % If cline is not valid, disable plotting and clear buttons
+                    app.VHIVUSDataButton.Enable = false;
+                    app.ClearImageDataButton.Enable = false;
+                    
                     % Re-enable input fields
                     app.SleeveThicknessmmEditField.Enable = true;
                     app.VHIVUSDirectoryEditField.Enable = true;
                     app.MinVHIVUSIDEditField.Enable = true;
                     app.MaxVHIVUSIDEditField.Enable = true;
                     app.PixelmmScaleFactorEditField.Enable = true;
-                    return;
                 end
-                
-                % Enable plotting and clear buttons
-                app.VHIVUSDataButton.Enable = true;
-                app.ClearImageDataButton.Enable = true;
-                app.ParseImagesButton.Enable = false;
-                
-                % Enable mesh creation button
-                app.GenerateMeshButton.Enable = true;
-                
-            else
-                % If cline is not valid, disable plotting and clear buttons
-                app.VHIVUSDataButton.Enable = false;
-                app.ClearImageDataButton.Enable = false;
-                
-                % Re-enable input fields
-                app.SleeveThicknessmmEditField.Enable = true;
-                app.VHIVUSDirectoryEditField.Enable = true;
-                app.MinVHIVUSIDEditField.Enable = true;
-                app.MaxVHIVUSIDEditField.Enable = true;
-                app.PixelmmScaleFactorEditField.Enable = true;
+            catch e
+                app.displayErrorMessage(e);
             end
         end
 
@@ -527,15 +637,24 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             num_names = 1;
             
             % Clear figure
-            [caz,cel] = view;
-            clf(app.fig);
+            refresh_view = false;
+            if ishandle(app.fig) && strcmp(get(app.fig, 'type'), 'figure')
+                [caz,cel] = view;
+                clf(app.fig);
+                refresh_view = true;
+            else
+                app.fig = figure;
+            end
+            
+            % Enable clear button
+            app.ClearFigureButton.Enable = true;
             
             % Plot volumetric mesh
             if app.VolumetricMeshButton.Value
                 plotTetMesh(app.tets,20,0,0);
             end
             
-            % Plot Centerline if button is selected
+            % Plot Centerline
             if app.CenterlineButton.Value
                 plot3(app.cline(:,1),app.cline(:,2),app.cline(:,3),'-o',...
                     'Color','m',...
@@ -545,15 +664,15 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
                 hold on;
             end
             
-            % Plot VHIVUS pixels if button is selected
+            % Plot VHIVUS pixels
             if app.VHIVUSDataButton.Value
                 % define colors for each material type
-                col_arterial      =   [135 135 135]./ 255;    % Arterial      - Grey
-                col_calcium       =   [255 255 255]./ 255;    % Calcium       - White
-                col_fibrotic      =   [0   170 0  ]./ 255;    % Fibrotic      - Dark Green
-                col_fibrofatty    =   [186 255 0  ]./ 255;    % Fibrofatty    - Light Green
-                col_necrotic      =   [255 0   0  ]./ 255;    % Necrotic Core - Red
-                col_sleeve        =   [0   0   255]./ 255;    % Sleeve        - Blue
+                col_arterial      =   app.mesh_config.ivus.artery.c/255;
+                col_calcium       =   app.mesh_config.ivus.calcium.c/255;
+                col_fibrotic      =   app.mesh_config.ivus.fibrotic.c/255;
+                col_fibrofatty    =   app.mesh_config.ivus.fibrofatty.c/255;
+                col_necrotic      =   app.mesh_config.ivus.necrotic.c/255;
+                col_sleeve        =   app.mesh_config.ivus.sleeve.c/255;
                 
                 % Stack pixel coords and types
                 coords = vertcat(app.layers.coords);
@@ -638,7 +757,9 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Set title name
             title(app.TitleEditField.Value);
             
-            view(caz,cel);
+            if refresh_view
+                view(caz,cel);
+            end
             legend(legend_names);
             
         end
@@ -651,7 +772,9 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
         % Button pushed function: ClearFigureButton
         function ClearFigureButtonPushed(app, event)
-            clf(app.fig);
+            if ishandle(app.fig) && strcmp(get(app.fig, 'type'), 'figure')
+                clf(app.fig);
+            end
         end
 
         % Value changed function: PoissonsRatioEditField, 
@@ -675,6 +798,26 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             
             % Check if all values are valid and enable the "Generate FEBio File" button if they
             
+        end
+
+        % Button pushed function: ClearCenterlineDataButton
+        function ClearCenterlineDataButtonPushed(app, event)
+            % Clear centerline object
+            app.cline = [];
+            
+            % Disable plotting and clear buttons
+            app.CenterlineButton.Enable = false;
+            app.CenterlineButton.Value = false;
+            app.ClearCenterlineDataButton.Enable = false;
+            app.UpdateFigureButtonPushed();
+            
+            % Re-enable input fields
+            app.CurvedButton.Enable = true;
+            app.StraightButton.Enable = true;
+            app.CenterlineFilePathEditField.Enable = true;
+            app.LoadCenterlineButton.Enable = true;
+            app.MinVHIVUSIDEditField.Enable = true;
+            app.MaxVHIVUSIDEditField.Enable = true;
         end
 
         % Value changed function: FEBiofebFileNameEditField, 
@@ -703,47 +846,50 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
         % Callback function: ButtonGroup_3, ButtonGroup_4, 
         % ButtonGroup_5, CenterlineFilePathEditField, 
-        % MaxVHIVUSIDEditField, MeshResolutionmmEditField, 
-        % MinVHIVUSIDEditField, PixelmmScaleFactorEditField, 
-        % SleeveThicknessmmEditField, VHIVUSDirectoryEditField
-        function MeshConfigPropertyValueChanged(app, event)
-            % Update mesh_config object
-            if app.CircularButton.Value == 1
-                app.mesh_config.mesh.branch_ideal = 1;
-            else
-                app.mesh_config.mesh.branch_ideal = 0;
-            end
-            if app.YesButton.Value == 1
-                app.mesh_config.mesh.branch_taper = 1;
-            else
-                app.mesh_config.mesh.branch_taper = 0;
-            end
+        % MaxVHIVUSIDEditField, MinVHIVUSIDEditField, 
+        % PixelmmScaleFactorEditField, SleeveThicknessmmEditField, 
+        % VHIVUSDirectoryEditField
+        function VHIVUSConfigPropertyValueChanged(app, event)
+            
+            % Update mesh_config centerline path
             app.mesh_config.cline_path = app.CenterlineFilePathEditField.Value;
+            
+            % Update curved vs straight toggle
+            if app.ButtonGroup_3.SelectedObject == app.CurvedButton
+                if isfile(app.mesh_config.cline_path)
+                    app.mesh_config.mesh.curvature = "curved";
+                    app.CurvedButton.Value = true;
+                    app.LoadCenterlineButton.Enable = true;
+                elseif ~isfile(app.mesh_config.cline_path)
+                    app.mesh_config.mesh.curvature = "straight";
+                    app.StraightButton.Value = true;
+                    app.LoadCenterlineButton.Enable = false;
+                end
+            elseif app.ButtonGroup_3.SelectedObject == app.StraightButton
+                if isfolder(app.mesh_config.img_folder)
+                    app.mesh_config.mesh.curvature = "straight";
+                    app.StraightButton.Value = true;
+                    app.LoadCenterlineButton.Enable = true;
+                else
+                    app.mesh_config.mesh.curvature = "straight";
+                    app.StraightButton.Value = true;
+                    app.LoadCenterlineButton.Enable = false;
+                end
+
+            end
+            
+            % Update mesh_config ivus folder
             app.mesh_config.img_folder = app.VHIVUSDirectoryEditField.Value;
+            
+            % Update ivus parameters
             app.mesh_config.ivus.min = app.MinVHIVUSIDEditField.Value;
             app.mesh_config.ivus.max = app.MaxVHIVUSIDEditField.Value;
             app.mesh_config.ivus.pixel_scale = app.PixelmmScaleFactorEditField.Value;
-            app.mesh_config.mesh.resample = app.MeshResolutionmmEditField.Value;
-            app.mesh_config.mesh.sleeve_thick = app.SleeveThicknessmmEditField.Value;
+            app.mesh_config.ivus.sleeve_thick = app.SleeveThicknessmmEditField.Value;
             
+            % Update IVUS image range
             app.mesh_config = getIVUSRange(app.mesh_config);
             app.updateVHIVUSMeshingLabels();
-            
-            if app.CurvedButton.Value == 1 && isfile(app.mesh_config.cline_path)
-                app.mesh_config.mesh.curvature = "curved";
-                app.LoadCenterlineButton.Enable = true;
-            elseif app.CurvedButton.Value == 1 && ~isfile(app.mesh_config.cline_path)
-                app.mesh_config.mesh.curvature = "straight";
-                app.CurvedButton.Value = 0;
-                app.StraightButton.Value = 1;
-                app.LoadCenterlineButton.Enable = false;
-            elseif isfolder(app.mesh_config.img_folder)
-                app.CurvedButton.Value = 0;
-                app.StraightButton.Value = 1;
-                app.LoadCenterlineButton.Enable = true;
-            else
-                app.LoadCenterlineButton.Enable = false;
-            end
             
             if isfolder(app.mesh_config.img_folder)
                 app.ParseImagesButton.Enable = true;
@@ -753,42 +899,30 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             
         end
 
-        % Button pushed function: ClearCenterlineDataButton
-        function ClearCenterlineDataButtonPushed(app, event)
-            % Clear centerline object
-            app.cline = [];
-            
-            % Disable plotting and clear buttons
-            app.CenterlineButton.Enable = false;
-            app.CenterlineButton.Value = false;
-            app.ClearCenterlineDataButton.Enable = false;
-            app.UpdateFigureButtonPushed();
-            
-            % Re-enable input fields
-            app.CurvedButton.Enable = true;
-            app.StraightButton.Enable = true;
-            app.CenterlineFilePathEditField.Enable = true;
-            app.LoadCenterlineButton.Enable = true;
-        end
-
         % Button pushed function: ClearImageDataButton
         function ClearImageDataButtonPushed(app, event)
             % Clear layers and is_branched objects
             app.layers = struct();
             app.is_branched = 0;
+            app.tets = struct();
             
             % Disable plotting and clear buttons
             app.VHIVUSDataButton.Enable = false;
             app.VHIVUSDataButton.Value = false;
+            app.SurfaceMeshButton.Enable = false;
+            app.SurfaceMeshButton.Value = false;
+            app.VolumetricMeshButton.Enable = false;
+            app.VolumetricMeshButton.Value = false;
             app.ClearImageDataButton.Enable = false;
+            app.GenerateMeshButton.Enable = false;
+            app.AssignMaterialsButton.Enable = false;
             app.UpdateFigureButtonPushed();
             
             % Re-enable input fields
             app.VHIVUSDirectoryEditField.Enable = true;
-            app.MinVHIVUSIDEditField.Enable = true;
-            app.MaxVHIVUSIDEditField.Enable = true;
             app.PixelmmScaleFactorEditField.Enable = true;
             app.ParseImagesButton.Enable = true;
+            app.SleeveThicknessmmEditField.Enable = true;
             
         end
 
@@ -803,17 +937,22 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.SurfaceMeshButton.Enable = false;
             app.SurfaceMeshButton.Value = false;
             app.ClearMeshDataButton.Enable = false;
+            app.VolumetricMeshButton.Enable = false;
+            app.VolumetricMeshButton.Value = false;
+            app.AssignMaterialsButton.Enable = false;
+            app.ClearAssignedDataButton.Enable = false;
             app.UpdateFigureButtonPushed();
             
             % Re-enable input fields
             app.GenerateMeshButton.Enable = true;
             app.MeshResolutionmmEditField.Enable = true;
-            app.SleeveThicknessmmEditField.Enable = true;
             app.CircularButton.Enable = true;
             app.NaturalButton.Enable = true;
             app.YesButton.Enable = true;
             app.NoButton.Enable = true;
             app.GenerateMeshButton.Enable = true;
+            app.SmoothingLambdaEditField.Enable = true;
+            app.SmoothingStepsEditField.Enable = true;
         end
 
         % Button pushed function: ReturnButton
@@ -826,6 +965,137 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         function SaveFEBioFileButtonPushed(app, event)
             generateFEbioInputFile(app.F, app.tets.surfs, app.tets, app.mesh_config, app.feb_config);
         end
+
+        % Button pushed function: ColorPickerButton
+        function ColorPickerButtonPushed(app, event)
+            app.mesh_config.ivus.artery.c = round(uisetcolor(app.mesh_config.ivus.artery.c/255,"Arterial Color")*255);
+            app.setVHIVUSColors();
+        end
+
+        % Button pushed function: ColorPickerButton_2
+        function ColorPickerButton_2Pushed(app, event)
+            app.mesh_config.ivus.fibrotic.c = round(uisetcolor(app.mesh_config.ivus.fibrotic.c/255,"Arterial Color")*255);
+            app.setVHIVUSColors();
+        end
+
+        % Button pushed function: ColorPickerButton_3
+        function ColorPickerButton_3Pushed(app, event)
+            app.mesh_config.ivus.fibrofatty.c = round(uisetcolor(app.mesh_config.ivus.fibrofatty.c/255,"Arterial Color")*255);
+            app.setVHIVUSColors();
+        end
+
+        % Button pushed function: ColorPickerButton_4
+        function ColorPickerButton_4Pushed(app, event)
+            app.mesh_config.ivus.necrotic.c = round(uisetcolor(app.mesh_config.ivus.necrotic.c/255,"Arterial Color")*255);
+            app.setVHIVUSColors();
+        end
+
+        % Button pushed function: ColorPickerButton_5
+        function ColorPickerButton_5Pushed(app, event)
+            app.mesh_config.ivus.calcium.c = round(uisetcolor(app.mesh_config.ivus.calcium.c/255,"Arterial Color")*255);
+            app.setVHIVUSColors();
+        end
+
+        % Callback function: MeshResolutionmmEditField, 
+        % SmoothingLambdaEditField, SmoothingStepsEditField, 
+        % UIFigure
+        function MeshingConfigPropertyValueChanged(app, event)
+            % Update mesh_config object
+            app.mesh_config.mesh.resample = app.MeshResolutionmmEditField.Value;
+            app.mesh_config.mesh.sleeve_thick = app.SleeveThicknessmmEditField.Value;
+            app.mesh_config.mesh.smooth_lambda = app.SmoothingLambdaEditField.Value;
+            app.mesh_config.mesh.smooth_n = app.SmoothingStepsEditField.Value;
+            
+            if app.CircularButton.Value == 1
+                app.mesh_config.mesh.branch_ideal = 1;
+            else
+                app.mesh_config.mesh.branch_ideal = 0;
+            end
+            if app.YesButton.Value == 1
+                app.mesh_config.mesh.branch_taper = 1;
+            else
+                app.mesh_config.mesh.branch_taper = 0;
+            end
+        end
+
+        % Button pushed function: ClearAssignedDataButton
+        function ClearAssignedDataButtonPushed(app, event)
+            app.tets.elementMaterialID = ones(size(app.tets.elementMaterialID))*-1;
+            app.ClearAssignedDataButton.Enable = false;
+            app.AssignMaterialsButton.Enable = true;
+            app.SaveFEBioFileButton.Enable = false;
+        end
+
+        % Button pushed function: LoadButton_4
+        function LoadButton_4Pushed(app, event)
+            try
+                filepath = app.EnterPathEditField_3.Value;
+                
+                % Check if file path is valid
+                if isfile(filepath)
+                    % If so, attempt to read file
+                    [app.mesh_config, app.feb_config] = parseSingleConfig(filepath);
+                    if ~isempty(app.mesh_config) && ~isempty(app.feb_config)
+                        app.Lamp.Color = [0,1,0];
+                        app.EnterPathEditField_3.Value = filepath;
+                        app.updateAllLabelsFromSimgleInputFile();
+                    end
+                else
+                    % If not, update lamp and label text
+                    app.Lamp.Color = [1,0,0];
+                end
+            catch e
+                app.displayErrorMessage(e);
+            end
+        end
+
+        % Button pushed function: LoadButton_3
+        function LoadButton_3Pushed(app, event)
+            try
+                % Load file
+                filepath = app.EnterPathEditField.Value;
+                
+                % Check if file path is valid
+                if isfile(filepath)
+                    % If so, attempt to read file
+                    [app.mesh_config] = parseMeshConfig(filepath);
+                    if ~isempty(app.mesh_config)
+                        app.Lamp_2.Color = [0,1,0];
+                        app.EnterPathEditField.Value = filepath;
+                        app.updateVHIVUSMeshingLabels();
+                    end
+                else
+                    % If not, update lamp and label text
+                    app.Lamp_2.Color = [1,0,0];
+                end
+            catch e
+                app.displayErrorMessage(e);
+            end
+        end
+
+        % Button pushed function: LoadButton_2
+        function LoadButton_2Pushed(app, event)
+            try
+                % Load file
+                filepath = app.EnterPathEditField_2.Value;
+                
+                % Check if file path is valid
+                if isfile(filepath)
+                    % If so, attempt to read file
+                    [app.feb_config] = parseFEBioConfig(filepath);
+                    if ~isempty(app.feb_config)
+                        app.Lamp_3.Color = [0,1,0];
+                        app.EnterPathEditField_2.Value = filepath;
+                        app.updateMaterialsFEBioLabels();
+                    end
+                else
+                    % If not, update lamp and label text
+                    app.Lamp_3.Color = [1,0,0];
+                end
+            catch e
+                app.displayErrorMessage(e);
+            end
+        end
     end
 
     % Component initialization
@@ -836,27 +1106,18 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 649 709];
+            app.UIFigure.Position = [100 100 650 689];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
+            app.UIFigure.ButtonDownFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
 
             % Create AutomatedVHIVUS3DArteryReconstructionLabel
             app.AutomatedVHIVUS3DArteryReconstructionLabel = uilabel(app.UIFigure);
             app.AutomatedVHIVUS3DArteryReconstructionLabel.HorizontalAlignment = 'center';
             app.AutomatedVHIVUS3DArteryReconstructionLabel.FontSize = 20;
             app.AutomatedVHIVUS3DArteryReconstructionLabel.FontWeight = 'bold';
-            app.AutomatedVHIVUS3DArteryReconstructionLabel.Position = [311 642 330 44];
+            app.AutomatedVHIVUS3DArteryReconstructionLabel.Position = [311 606 330 44];
             app.AutomatedVHIVUS3DArteryReconstructionLabel.Text = 'VH-IVUS Artery Reconstruction';
-
-            % Create Image
-            app.Image = uiimage(app.UIFigure);
-            app.Image.Position = [111 590 190 110];
-            app.Image.ImageSource = 'VolumeAndStressCrossover.png';
-
-            % Create Image3
-            app.Image3 = uiimage(app.UIFigure);
-            app.Image3.Position = [11 590 110 110];
-            app.Image3.ImageSource = 'utdLogo.jpg';
 
             % Create MeshingFEBioPropertyManagerPanel
             app.MeshingFEBioPropertyManagerPanel = uipanel(app.UIFigure);
@@ -871,27 +1132,21 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.TabGroup = uitabgroup(app.MeshingFEBioPropertyManagerPanel);
             app.TabGroup.Position = [11 7 310 530];
 
-            % Create VHIVUSMeshingTab
-            app.VHIVUSMeshingTab = uitab(app.TabGroup);
-            app.VHIVUSMeshingTab.Title = 'VH-IVUS/Meshing';
-            app.VHIVUSMeshingTab.BackgroundColor = [0.902 0.902 0.902];
-
-            % Create GridLayout41
-            app.GridLayout41 = uigridlayout(app.VHIVUSMeshingTab);
-            app.GridLayout41.ColumnWidth = {'1x'};
-            app.GridLayout41.RowHeight = {'0.75x', '1.3x', '1x', '0.4x'};
-            app.GridLayout41.ColumnSpacing = 5;
-            app.GridLayout41.RowSpacing = 5;
-            app.GridLayout41.Padding = [5 5 5 5];
+            % Create VHIVUSTab
+            app.VHIVUSTab = uitab(app.TabGroup);
+            app.VHIVUSTab.Title = 'VH-IVUS';
+            app.VHIVUSTab.BackgroundColor = [0.902 0.902 0.902];
+            app.VHIVUSTab.Scrollable = 'on';
 
             % Create CenterlinePanel
-            app.CenterlinePanel = uipanel(app.GridLayout41);
+            app.CenterlinePanel = uipanel(app.VHIVUSTab);
+            app.CenterlinePanel.AutoResizeChildren = 'off';
             app.CenterlinePanel.Title = 'Centerline';
             app.CenterlinePanel.BackgroundColor = [0.8 0.8 0.8];
-            app.CenterlinePanel.Layout.Row = 1;
-            app.CenterlinePanel.Layout.Column = 1;
             app.CenterlinePanel.FontWeight = 'bold';
+            app.CenterlinePanel.Scrollable = 'on';
             app.CenterlinePanel.FontSize = 13;
+            app.CenterlinePanel.Position = [9 385 290 108];
 
             % Create GridLayout33
             app.GridLayout33 = uigridlayout(app.CenterlinePanel);
@@ -919,7 +1174,8 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create ButtonGroup_3
             app.ButtonGroup_3 = uibuttongroup(app.GridLayout34);
-            app.ButtonGroup_3.SelectionChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.ButtonGroup_3.AutoResizeChildren = 'off';
+            app.ButtonGroup_3.SelectionChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.ButtonGroup_3.BorderType = 'none';
             app.ButtonGroup_3.BackgroundColor = [0.8 0.8 0.8];
             app.ButtonGroup_3.Layout.Row = 1;
@@ -928,13 +1184,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create CurvedButton
             app.CurvedButton = uitogglebutton(app.ButtonGroup_3);
             app.CurvedButton.Text = 'Curved';
-            app.CurvedButton.Position = [1 0 60 22];
+            app.CurvedButton.Position = [1 3 60 22];
 
             % Create StraightButton
             app.StraightButton = uitogglebutton(app.ButtonGroup_3);
             app.StraightButton.IconAlignment = 'right';
             app.StraightButton.Text = 'Straight';
-            app.StraightButton.Position = [71 0 60 22];
+            app.StraightButton.Position = [71 3 60 22];
             app.StraightButton.Value = true;
 
             % Create GridLayout35
@@ -955,7 +1211,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create CenterlineFilePathEditField
             app.CenterlineFilePathEditField = uieditfield(app.GridLayout35, 'text');
-            app.CenterlineFilePathEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.CenterlineFilePathEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.CenterlineFilePathEditField.Layout.Row = 1;
             app.CenterlineFilePathEditField.Layout.Column = 2;
 
@@ -991,25 +1247,27 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.ClearCenterlineDataButton.Text = 'Clear Centerline Data';
 
             % Create VHIVUSPanel
-            app.VHIVUSPanel = uipanel(app.GridLayout41);
+            app.VHIVUSPanel = uipanel(app.VHIVUSTab);
+            app.VHIVUSPanel.AutoResizeChildren = 'off';
             app.VHIVUSPanel.Title = 'VH-IVUS';
             app.VHIVUSPanel.BackgroundColor = [0.8 0.8 0.8];
-            app.VHIVUSPanel.Layout.Row = 2;
-            app.VHIVUSPanel.Layout.Column = 1;
             app.VHIVUSPanel.FontWeight = 'bold';
             app.VHIVUSPanel.Scrollable = 'on';
             app.VHIVUSPanel.FontSize = 13;
+            app.VHIVUSPanel.Position = [11 46 290 319];
 
             % Create GridLayout3
             app.GridLayout3 = uigridlayout(app.VHIVUSPanel);
             app.GridLayout3.ColumnWidth = {'1x'};
-            app.GridLayout3.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout3.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x', '1x'};
             app.GridLayout3.ColumnSpacing = 5;
             app.GridLayout3.RowSpacing = 5;
             app.GridLayout3.Padding = [5 5 5 5];
+            app.GridLayout3.Scrollable = 'on';
 
             % Create GridLayout28
             app.GridLayout28 = uigridlayout(app.GridLayout3);
+            app.GridLayout28.ColumnWidth = {'1x', '0.75x'};
             app.GridLayout28.RowHeight = {'1x'};
             app.GridLayout28.ColumnSpacing = 5;
             app.GridLayout28.RowSpacing = 5;
@@ -1026,12 +1284,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create VHIVUSDirectoryEditField
             app.VHIVUSDirectoryEditField = uieditfield(app.GridLayout28, 'text');
-            app.VHIVUSDirectoryEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.VHIVUSDirectoryEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.VHIVUSDirectoryEditField.Layout.Row = 1;
             app.VHIVUSDirectoryEditField.Layout.Column = 2;
 
             % Create GridLayout30
             app.GridLayout30 = uigridlayout(app.GridLayout3);
+            app.GridLayout30.ColumnWidth = {'1x', '0.75x'};
             app.GridLayout30.RowHeight = {'1x'};
             app.GridLayout30.ColumnSpacing = 5;
             app.GridLayout30.RowSpacing = 5;
@@ -1049,13 +1308,14 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create MinVHIVUSIDEditField
             app.MinVHIVUSIDEditField = uieditfield(app.GridLayout30, 'numeric');
             app.MinVHIVUSIDEditField.Limits = [-1 Inf];
-            app.MinVHIVUSIDEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.MinVHIVUSIDEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.MinVHIVUSIDEditField.HorizontalAlignment = 'center';
             app.MinVHIVUSIDEditField.Layout.Row = 1;
             app.MinVHIVUSIDEditField.Layout.Column = 2;
 
             % Create GridLayout31
             app.GridLayout31 = uigridlayout(app.GridLayout3);
+            app.GridLayout31.ColumnWidth = {'1x', '0.75x'};
             app.GridLayout31.RowHeight = {'1x'};
             app.GridLayout31.ColumnSpacing = 5;
             app.GridLayout31.RowSpacing = 5;
@@ -1073,7 +1333,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create MaxVHIVUSIDEditField
             app.MaxVHIVUSIDEditField = uieditfield(app.GridLayout31, 'numeric');
             app.MaxVHIVUSIDEditField.Limits = [1 Inf];
-            app.MaxVHIVUSIDEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.MaxVHIVUSIDEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.MaxVHIVUSIDEditField.HorizontalAlignment = 'center';
             app.MaxVHIVUSIDEditField.Layout.Row = 1;
             app.MaxVHIVUSIDEditField.Layout.Column = 2;
@@ -1081,6 +1341,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create GridLayout32
             app.GridLayout32 = uigridlayout(app.GridLayout3);
+            app.GridLayout32.ColumnWidth = {'1x', '0.75x'};
             app.GridLayout32.RowHeight = {'1x'};
             app.GridLayout32.ColumnSpacing = 5;
             app.GridLayout32.RowSpacing = 5;
@@ -1098,7 +1359,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create PixelmmScaleFactorEditField
             app.PixelmmScaleFactorEditField = uieditfield(app.GridLayout32, 'numeric');
             app.PixelmmScaleFactorEditField.Limits = [0.0001 Inf];
-            app.PixelmmScaleFactorEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.PixelmmScaleFactorEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.PixelmmScaleFactorEditField.HorizontalAlignment = 'center';
             app.PixelmmScaleFactorEditField.Layout.Row = 1;
             app.PixelmmScaleFactorEditField.Layout.Column = 2;
@@ -1109,7 +1370,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.GridLayout46.RowHeight = {'1x'};
             app.GridLayout46.ColumnSpacing = 5;
             app.GridLayout46.Padding = [0 0 0 0];
-            app.GridLayout46.Layout.Row = 6;
+            app.GridLayout46.Layout.Row = 11;
             app.GridLayout46.Layout.Column = 1;
 
             % Create ParseImagesButton
@@ -1136,6 +1397,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create GridLayout50
             app.GridLayout50 = uigridlayout(app.GridLayout3);
+            app.GridLayout50.ColumnWidth = {'1x', '0.75x'};
             app.GridLayout50.RowHeight = {'1x'};
             app.GridLayout50.ColumnSpacing = 5;
             app.GridLayout50.RowSpacing = 5;
@@ -1153,27 +1415,260 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create SleeveThicknessmmEditField
             app.SleeveThicknessmmEditField = uieditfield(app.GridLayout50, 'numeric');
             app.SleeveThicknessmmEditField.Limits = [0 Inf];
-            app.SleeveThicknessmmEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.SleeveThicknessmmEditField.ValueChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.SleeveThicknessmmEditField.HorizontalAlignment = 'center';
             app.SleeveThicknessmmEditField.Layout.Row = 1;
             app.SleeveThicknessmmEditField.Layout.Column = 2;
 
+            % Create GridLayout58
+            app.GridLayout58 = uigridlayout(app.GridLayout3);
+            app.GridLayout58.ColumnWidth = {'1x', '0.5x', '0.5x', '0.5x', '1.2x'};
+            app.GridLayout58.RowHeight = {'1x'};
+            app.GridLayout58.ColumnSpacing = 5;
+            app.GridLayout58.RowSpacing = 0;
+            app.GridLayout58.Padding = [0 0 0 0];
+            app.GridLayout58.Layout.Row = 6;
+            app.GridLayout58.Layout.Column = 1;
+
+            % Create ArterialLabel
+            app.ArterialLabel = uilabel(app.GridLayout58);
+            app.ArterialLabel.HorizontalAlignment = 'center';
+            app.ArterialLabel.Layout.Row = 1;
+            app.ArterialLabel.Layout.Column = 1;
+            app.ArterialLabel.Text = 'Arterial';
+
+            % Create ColorPickerButton
+            app.ColorPickerButton = uibutton(app.GridLayout58, 'push');
+            app.ColorPickerButton.ButtonPushedFcn = createCallbackFcn(app, @ColorPickerButtonPushed, true);
+            app.ColorPickerButton.BackgroundColor = [0.651 0.651 0.651];
+            app.ColorPickerButton.Layout.Row = 1;
+            app.ColorPickerButton.Layout.Column = 5;
+            app.ColorPickerButton.Text = 'Color Picker';
+
+            % Create B255Label
+            app.B255Label = uilabel(app.GridLayout58);
+            app.B255Label.FontColor = [0 0.4471 0.7412];
+            app.B255Label.Layout.Row = 1;
+            app.B255Label.Layout.Column = 4;
+            app.B255Label.Text = 'B:255';
+
+            % Create R255Label
+            app.R255Label = uilabel(app.GridLayout58);
+            app.R255Label.FontColor = [1 0 0];
+            app.R255Label.Layout.Row = 1;
+            app.R255Label.Layout.Column = 2;
+            app.R255Label.Text = 'R:255';
+
+            % Create G255Label
+            app.G255Label = uilabel(app.GridLayout58);
+            app.G255Label.FontColor = [0 0.6706 0];
+            app.G255Label.Layout.Row = 1;
+            app.G255Label.Layout.Column = 3;
+            app.G255Label.Text = 'G:255';
+
+            % Create GridLayout59
+            app.GridLayout59 = uigridlayout(app.GridLayout3);
+            app.GridLayout59.ColumnWidth = {'1x', '0.5x', '0.5x', '0.5x', '1.2x'};
+            app.GridLayout59.RowHeight = {'1x'};
+            app.GridLayout59.ColumnSpacing = 5;
+            app.GridLayout59.RowSpacing = 0;
+            app.GridLayout59.Padding = [0 0 0 0];
+            app.GridLayout59.Layout.Row = 7;
+            app.GridLayout59.Layout.Column = 1;
+
+            % Create FibroticLabel
+            app.FibroticLabel = uilabel(app.GridLayout59);
+            app.FibroticLabel.HorizontalAlignment = 'center';
+            app.FibroticLabel.Layout.Row = 1;
+            app.FibroticLabel.Layout.Column = 1;
+            app.FibroticLabel.Text = 'Fibrotic';
+
+            % Create ColorPickerButton_2
+            app.ColorPickerButton_2 = uibutton(app.GridLayout59, 'push');
+            app.ColorPickerButton_2.ButtonPushedFcn = createCallbackFcn(app, @ColorPickerButton_2Pushed, true);
+            app.ColorPickerButton_2.BackgroundColor = [0.651 0.651 0.651];
+            app.ColorPickerButton_2.Layout.Row = 1;
+            app.ColorPickerButton_2.Layout.Column = 5;
+            app.ColorPickerButton_2.Text = 'Color Picker';
+
+            % Create R255Label_2
+            app.R255Label_2 = uilabel(app.GridLayout59);
+            app.R255Label_2.FontColor = [1 0 0];
+            app.R255Label_2.Layout.Row = 1;
+            app.R255Label_2.Layout.Column = 2;
+            app.R255Label_2.Text = 'R:255';
+
+            % Create G255Label_2
+            app.G255Label_2 = uilabel(app.GridLayout59);
+            app.G255Label_2.FontColor = [0 0.6706 0];
+            app.G255Label_2.Layout.Row = 1;
+            app.G255Label_2.Layout.Column = 3;
+            app.G255Label_2.Text = 'G:255';
+
+            % Create B255Label_2
+            app.B255Label_2 = uilabel(app.GridLayout59);
+            app.B255Label_2.FontColor = [0 0.4471 0.7412];
+            app.B255Label_2.Layout.Row = 1;
+            app.B255Label_2.Layout.Column = 4;
+            app.B255Label_2.Text = 'B:255';
+
+            % Create GridLayout60
+            app.GridLayout60 = uigridlayout(app.GridLayout3);
+            app.GridLayout60.ColumnWidth = {'1x', '0.5x', '0.5x', '0.5x', '1.2x'};
+            app.GridLayout60.RowHeight = {'1x'};
+            app.GridLayout60.ColumnSpacing = 5;
+            app.GridLayout60.RowSpacing = 0;
+            app.GridLayout60.Padding = [0 0 0 0];
+            app.GridLayout60.Layout.Row = 8;
+            app.GridLayout60.Layout.Column = 1;
+
+            % Create FibrofattyLabel
+            app.FibrofattyLabel = uilabel(app.GridLayout60);
+            app.FibrofattyLabel.HorizontalAlignment = 'center';
+            app.FibrofattyLabel.Layout.Row = 1;
+            app.FibrofattyLabel.Layout.Column = 1;
+            app.FibrofattyLabel.Text = 'Fibrofatty';
+
+            % Create ColorPickerButton_3
+            app.ColorPickerButton_3 = uibutton(app.GridLayout60, 'push');
+            app.ColorPickerButton_3.ButtonPushedFcn = createCallbackFcn(app, @ColorPickerButton_3Pushed, true);
+            app.ColorPickerButton_3.BackgroundColor = [0.651 0.651 0.651];
+            app.ColorPickerButton_3.Layout.Row = 1;
+            app.ColorPickerButton_3.Layout.Column = 5;
+            app.ColorPickerButton_3.Text = 'Color Picker';
+
+            % Create R255Label_6
+            app.R255Label_6 = uilabel(app.GridLayout60);
+            app.R255Label_6.FontColor = [1 0 0];
+            app.R255Label_6.Layout.Row = 1;
+            app.R255Label_6.Layout.Column = 2;
+            app.R255Label_6.Text = 'R:255';
+
+            % Create G255Label_3
+            app.G255Label_3 = uilabel(app.GridLayout60);
+            app.G255Label_3.FontColor = [0 0.6706 0];
+            app.G255Label_3.Layout.Row = 1;
+            app.G255Label_3.Layout.Column = 3;
+            app.G255Label_3.Text = 'G:255';
+
+            % Create B255Label_3
+            app.B255Label_3 = uilabel(app.GridLayout60);
+            app.B255Label_3.FontColor = [0 0.4471 0.7412];
+            app.B255Label_3.Layout.Row = 1;
+            app.B255Label_3.Layout.Column = 4;
+            app.B255Label_3.Text = 'B:255';
+
+            % Create GridLayout61
+            app.GridLayout61 = uigridlayout(app.GridLayout3);
+            app.GridLayout61.ColumnWidth = {'1x', '0.5x', '0.5x', '0.5x', '1.2x'};
+            app.GridLayout61.RowHeight = {'1x'};
+            app.GridLayout61.ColumnSpacing = 5;
+            app.GridLayout61.RowSpacing = 0;
+            app.GridLayout61.Padding = [0 0 0 0];
+            app.GridLayout61.Layout.Row = 9;
+            app.GridLayout61.Layout.Column = 1;
+
+            % Create NecroticLabel
+            app.NecroticLabel = uilabel(app.GridLayout61);
+            app.NecroticLabel.HorizontalAlignment = 'center';
+            app.NecroticLabel.Layout.Row = 1;
+            app.NecroticLabel.Layout.Column = 1;
+            app.NecroticLabel.Text = 'Necrotic';
+
+            % Create ColorPickerButton_4
+            app.ColorPickerButton_4 = uibutton(app.GridLayout61, 'push');
+            app.ColorPickerButton_4.ButtonPushedFcn = createCallbackFcn(app, @ColorPickerButton_4Pushed, true);
+            app.ColorPickerButton_4.BackgroundColor = [0.651 0.651 0.651];
+            app.ColorPickerButton_4.Layout.Row = 1;
+            app.ColorPickerButton_4.Layout.Column = 5;
+            app.ColorPickerButton_4.Text = 'Color Picker';
+
+            % Create R255Label_7
+            app.R255Label_7 = uilabel(app.GridLayout61);
+            app.R255Label_7.FontColor = [1 0 0];
+            app.R255Label_7.Layout.Row = 1;
+            app.R255Label_7.Layout.Column = 2;
+            app.R255Label_7.Text = 'R:255';
+
+            % Create G255Label_4
+            app.G255Label_4 = uilabel(app.GridLayout61);
+            app.G255Label_4.FontColor = [0 0.6706 0];
+            app.G255Label_4.Layout.Row = 1;
+            app.G255Label_4.Layout.Column = 3;
+            app.G255Label_4.Text = 'G:255';
+
+            % Create B255Label_4
+            app.B255Label_4 = uilabel(app.GridLayout61);
+            app.B255Label_4.FontColor = [0 0.4471 0.7412];
+            app.B255Label_4.Layout.Row = 1;
+            app.B255Label_4.Layout.Column = 4;
+            app.B255Label_4.Text = 'B:255';
+
+            % Create GridLayout62
+            app.GridLayout62 = uigridlayout(app.GridLayout3);
+            app.GridLayout62.ColumnWidth = {'1x', '0.5x', '0.5x', '0.5x', '1.2x'};
+            app.GridLayout62.RowHeight = {'1x'};
+            app.GridLayout62.ColumnSpacing = 5;
+            app.GridLayout62.RowSpacing = 0;
+            app.GridLayout62.Padding = [0 0 0 0];
+            app.GridLayout62.Layout.Row = 10;
+            app.GridLayout62.Layout.Column = 1;
+
+            % Create CalciumLabel
+            app.CalciumLabel = uilabel(app.GridLayout62);
+            app.CalciumLabel.HorizontalAlignment = 'center';
+            app.CalciumLabel.Layout.Row = 1;
+            app.CalciumLabel.Layout.Column = 1;
+            app.CalciumLabel.Text = 'Calcium';
+
+            % Create ColorPickerButton_5
+            app.ColorPickerButton_5 = uibutton(app.GridLayout62, 'push');
+            app.ColorPickerButton_5.ButtonPushedFcn = createCallbackFcn(app, @ColorPickerButton_5Pushed, true);
+            app.ColorPickerButton_5.BackgroundColor = [0.651 0.651 0.651];
+            app.ColorPickerButton_5.Layout.Row = 1;
+            app.ColorPickerButton_5.Layout.Column = 5;
+            app.ColorPickerButton_5.Text = 'Color Picker';
+
+            % Create R255Label_8
+            app.R255Label_8 = uilabel(app.GridLayout62);
+            app.R255Label_8.FontColor = [1 0 0];
+            app.R255Label_8.Layout.Row = 1;
+            app.R255Label_8.Layout.Column = 2;
+            app.R255Label_8.Text = 'R:255';
+
+            % Create G255Label_5
+            app.G255Label_5 = uilabel(app.GridLayout62);
+            app.G255Label_5.FontColor = [0 0.6706 0];
+            app.G255Label_5.Layout.Row = 1;
+            app.G255Label_5.Layout.Column = 3;
+            app.G255Label_5.Text = 'G:255';
+
+            % Create B255Label_5
+            app.B255Label_5 = uilabel(app.GridLayout62);
+            app.B255Label_5.FontColor = [0 0.4471 0.7412];
+            app.B255Label_5.Layout.Row = 1;
+            app.B255Label_5.Layout.Column = 4;
+            app.B255Label_5.Text = 'B:255';
+
+            % Create MeshingTab
+            app.MeshingTab = uitab(app.TabGroup);
+            app.MeshingTab.Title = 'Meshing';
+
             % Create MeshingPanel
-            app.MeshingPanel = uipanel(app.GridLayout41);
+            app.MeshingPanel = uipanel(app.MeshingTab);
             app.MeshingPanel.Title = 'Meshing';
             app.MeshingPanel.BackgroundColor = [0.8 0.8 0.8];
-            app.MeshingPanel.Layout.Row = 3;
-            app.MeshingPanel.Layout.Column = 1;
             app.MeshingPanel.FontWeight = 'bold';
             app.MeshingPanel.Scrollable = 'on';
             app.MeshingPanel.FontSize = 13;
+            app.MeshingPanel.Position = [9 305 290 188];
 
             % Create GridLayout2
             app.GridLayout2 = uigridlayout(app.MeshingPanel);
             app.GridLayout2.ColumnWidth = {'1x'};
-            app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x'};
+            app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x'};
             app.GridLayout2.ColumnSpacing = 5;
-            app.GridLayout2.RowSpacing = 5;
+            app.GridLayout2.RowSpacing = 2;
             app.GridLayout2.Padding = [5 5 5 5];
 
             % Create GridLayout4
@@ -1196,7 +1691,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create MeshResolutionmmEditField
             app.MeshResolutionmmEditField = uieditfield(app.GridLayout4, 'numeric');
             app.MeshResolutionmmEditField.Limits = [0.001 Inf];
-            app.MeshResolutionmmEditField.ValueChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.MeshResolutionmmEditField.ValueChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
             app.MeshResolutionmmEditField.HorizontalAlignment = 'center';
             app.MeshResolutionmmEditField.Layout.Row = 1;
             app.MeshResolutionmmEditField.Layout.Column = 2;
@@ -1209,7 +1704,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.GridLayout7.ColumnSpacing = 5;
             app.GridLayout7.RowSpacing = 5;
             app.GridLayout7.Padding = [5 0 5 0];
-            app.GridLayout7.Layout.Row = 2;
+            app.GridLayout7.Layout.Row = 4;
             app.GridLayout7.Layout.Column = 1;
 
             % Create BranchOutletShapeLabel
@@ -1221,7 +1716,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create ButtonGroup_4
             app.ButtonGroup_4 = uibuttongroup(app.GridLayout7);
-            app.ButtonGroup_4.SelectionChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.ButtonGroup_4.SelectionChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.ButtonGroup_4.BorderType = 'none';
             app.ButtonGroup_4.BackgroundColor = [0.8 0.8 0.8];
             app.ButtonGroup_4.Layout.Row = 1;
@@ -1230,13 +1725,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create CircularButton
             app.CircularButton = uitogglebutton(app.ButtonGroup_4);
             app.CircularButton.Text = 'Circular';
-            app.CircularButton.Position = [1 2 50 22];
+            app.CircularButton.Position = [1 1 50 22];
             app.CircularButton.Value = true;
 
             % Create NaturalButton
             app.NaturalButton = uitogglebutton(app.ButtonGroup_4);
             app.NaturalButton.Text = 'Natural';
-            app.NaturalButton.Position = [61 2 50 22];
+            app.NaturalButton.Position = [61 1 50 22];
 
             % Create GridLayout8
             app.GridLayout8 = uigridlayout(app.GridLayout2);
@@ -1245,7 +1740,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.GridLayout8.ColumnSpacing = 5;
             app.GridLayout8.RowSpacing = 5;
             app.GridLayout8.Padding = [5 0 5 0];
-            app.GridLayout8.Layout.Row = 3;
+            app.GridLayout8.Layout.Row = 5;
             app.GridLayout8.Layout.Column = 1;
 
             % Create TaperBranchOutletLabel
@@ -1257,7 +1752,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create ButtonGroup_5
             app.ButtonGroup_5 = uibuttongroup(app.GridLayout8);
-            app.ButtonGroup_5.SelectionChangedFcn = createCallbackFcn(app, @MeshConfigPropertyValueChanged, true);
+            app.ButtonGroup_5.SelectionChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
             app.ButtonGroup_5.BorderType = 'none';
             app.ButtonGroup_5.BackgroundColor = [0.8 0.8 0.8];
             app.ButtonGroup_5.Layout.Row = 1;
@@ -1266,13 +1761,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create YesButton
             app.YesButton = uitogglebutton(app.ButtonGroup_5);
             app.YesButton.Text = 'Yes';
-            app.YesButton.Position = [1 2 50 22];
+            app.YesButton.Position = [1 1 50 22];
             app.YesButton.Value = true;
 
             % Create NoButton
             app.NoButton = uitogglebutton(app.ButtonGroup_5);
             app.NoButton.Text = 'No';
-            app.NoButton.Position = [61 2 50 22];
+            app.NoButton.Position = [61 1 50 22];
 
             % Create GridLayout47
             app.GridLayout47 = uigridlayout(app.GridLayout2);
@@ -1280,7 +1775,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.GridLayout47.ColumnSpacing = 5;
             app.GridLayout47.RowSpacing = 0;
             app.GridLayout47.Padding = [0 0 0 0];
-            app.GridLayout47.Layout.Row = 4;
+            app.GridLayout47.Layout.Row = 6;
             app.GridLayout47.Layout.Column = 1;
 
             % Create GenerateMeshButton
@@ -1297,13 +1792,134 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create ClearMeshDataButton
             app.ClearMeshDataButton = uibutton(app.GridLayout47, 'push');
             app.ClearMeshDataButton.ButtonPushedFcn = createCallbackFcn(app, @ClearMeshDataButtonPushed, true);
-            app.ClearMeshDataButton.BackgroundColor = [0.9294 0.6941 0.1255];
+            app.ClearMeshDataButton.BackgroundColor = [0.9294 0.6902 0.1294];
             app.ClearMeshDataButton.FontSize = 13;
             app.ClearMeshDataButton.FontWeight = 'bold';
             app.ClearMeshDataButton.Enable = 'off';
             app.ClearMeshDataButton.Layout.Row = 1;
             app.ClearMeshDataButton.Layout.Column = 2;
             app.ClearMeshDataButton.Text = 'Clear Mesh Data';
+
+            % Create GridLayout63
+            app.GridLayout63 = uigridlayout(app.GridLayout2);
+            app.GridLayout63.ColumnWidth = {'1x', '0.75x'};
+            app.GridLayout63.RowHeight = {'1x'};
+            app.GridLayout63.ColumnSpacing = 5;
+            app.GridLayout63.RowSpacing = 5;
+            app.GridLayout63.Padding = [5 0 5 0];
+            app.GridLayout63.Layout.Row = 2;
+            app.GridLayout63.Layout.Column = 1;
+
+            % Create SmoothingLambdaEditFieldLabel
+            app.SmoothingLambdaEditFieldLabel = uilabel(app.GridLayout63);
+            app.SmoothingLambdaEditFieldLabel.HorizontalAlignment = 'center';
+            app.SmoothingLambdaEditFieldLabel.Layout.Row = 1;
+            app.SmoothingLambdaEditFieldLabel.Layout.Column = 1;
+            app.SmoothingLambdaEditFieldLabel.Text = 'Smoothing Lambda';
+
+            % Create SmoothingLambdaEditField
+            app.SmoothingLambdaEditField = uieditfield(app.GridLayout63, 'numeric');
+            app.SmoothingLambdaEditField.Limits = [0.001 Inf];
+            app.SmoothingLambdaEditField.ValueChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
+            app.SmoothingLambdaEditField.HorizontalAlignment = 'center';
+            app.SmoothingLambdaEditField.Layout.Row = 1;
+            app.SmoothingLambdaEditField.Layout.Column = 2;
+            app.SmoothingLambdaEditField.Value = 0.8;
+
+            % Create GridLayout64
+            app.GridLayout64 = uigridlayout(app.GridLayout2);
+            app.GridLayout64.ColumnWidth = {'1x', '0.75x'};
+            app.GridLayout64.RowHeight = {'1x'};
+            app.GridLayout64.ColumnSpacing = 5;
+            app.GridLayout64.RowSpacing = 5;
+            app.GridLayout64.Padding = [5 0 5 0];
+            app.GridLayout64.Layout.Row = 3;
+            app.GridLayout64.Layout.Column = 1;
+
+            % Create SmoothingStepsEditFieldLabel
+            app.SmoothingStepsEditFieldLabel = uilabel(app.GridLayout64);
+            app.SmoothingStepsEditFieldLabel.HorizontalAlignment = 'center';
+            app.SmoothingStepsEditFieldLabel.Layout.Row = 1;
+            app.SmoothingStepsEditFieldLabel.Layout.Column = 1;
+            app.SmoothingStepsEditFieldLabel.Text = '# Smoothing Steps';
+
+            % Create SmoothingStepsEditField
+            app.SmoothingStepsEditField = uieditfield(app.GridLayout64, 'numeric');
+            app.SmoothingStepsEditField.ValueChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
+            app.SmoothingStepsEditField.HorizontalAlignment = 'center';
+            app.SmoothingStepsEditField.Layout.Row = 1;
+            app.SmoothingStepsEditField.Layout.Column = 2;
+            app.SmoothingStepsEditField.Value = 8;
+
+            % Create MaterialAssignmentPanel
+            app.MaterialAssignmentPanel = uipanel(app.MeshingTab);
+            app.MaterialAssignmentPanel.Title = 'Material Assignment';
+            app.MaterialAssignmentPanel.BackgroundColor = [0.8 0.8 0.8];
+            app.MaterialAssignmentPanel.FontWeight = 'bold';
+            app.MaterialAssignmentPanel.FontSize = 13;
+            app.MaterialAssignmentPanel.Position = [11 195 290 90];
+
+            % Create GridLayout65
+            app.GridLayout65 = uigridlayout(app.MaterialAssignmentPanel);
+            app.GridLayout65.ColumnWidth = {'1x'};
+            app.GridLayout65.ColumnSpacing = 5;
+            app.GridLayout65.RowSpacing = 5;
+            app.GridLayout65.Padding = [5 5 5 5];
+
+            % Create GridLayout66
+            app.GridLayout66 = uigridlayout(app.GridLayout65);
+            app.GridLayout66.ColumnWidth = {'0.5x', '1x'};
+            app.GridLayout66.RowHeight = {'1x'};
+            app.GridLayout66.ColumnSpacing = 5;
+            app.GridLayout66.RowSpacing = 5;
+            app.GridLayout66.Padding = [5 0 5 0];
+            app.GridLayout66.Layout.Row = 1;
+            app.GridLayout66.Layout.Column = 1;
+
+            % Create MethodListBoxLabel
+            app.MethodListBoxLabel = uilabel(app.GridLayout66);
+            app.MethodListBoxLabel.HorizontalAlignment = 'center';
+            app.MethodListBoxLabel.Layout.Row = 1;
+            app.MethodListBoxLabel.Layout.Column = 1;
+            app.MethodListBoxLabel.Text = 'Method';
+
+            % Create MethodListBox
+            app.MethodListBox = uilistbox(app.GridLayout66);
+            app.MethodListBox.Items = {'Axial Partition', 'Generic'};
+            app.MethodListBox.Layout.Row = 1;
+            app.MethodListBox.Layout.Column = 2;
+            app.MethodListBox.Value = 'Axial Partition';
+
+            % Create GridLayout67
+            app.GridLayout67 = uigridlayout(app.GridLayout65);
+            app.GridLayout67.RowHeight = {'1x'};
+            app.GridLayout67.ColumnSpacing = 5;
+            app.GridLayout67.RowSpacing = 5;
+            app.GridLayout67.Padding = [0 0 0 0];
+            app.GridLayout67.Layout.Row = 2;
+            app.GridLayout67.Layout.Column = 1;
+
+            % Create AssignMaterialsButton
+            app.AssignMaterialsButton = uibutton(app.GridLayout67, 'push');
+            app.AssignMaterialsButton.ButtonPushedFcn = createCallbackFcn(app, @AssignMaterialsButtonPushed, true);
+            app.AssignMaterialsButton.BackgroundColor = [0.1608 0.6 0.2196];
+            app.AssignMaterialsButton.FontSize = 13;
+            app.AssignMaterialsButton.FontWeight = 'bold';
+            app.AssignMaterialsButton.Enable = 'off';
+            app.AssignMaterialsButton.Layout.Row = 1;
+            app.AssignMaterialsButton.Layout.Column = 1;
+            app.AssignMaterialsButton.Text = 'Assign Materials';
+
+            % Create ClearAssignedDataButton
+            app.ClearAssignedDataButton = uibutton(app.GridLayout67, 'push');
+            app.ClearAssignedDataButton.ButtonPushedFcn = createCallbackFcn(app, @ClearAssignedDataButtonPushed, true);
+            app.ClearAssignedDataButton.BackgroundColor = [0.9294 0.6902 0.1294];
+            app.ClearAssignedDataButton.FontSize = 13;
+            app.ClearAssignedDataButton.FontWeight = 'bold';
+            app.ClearAssignedDataButton.Enable = 'off';
+            app.ClearAssignedDataButton.Layout.Row = 1;
+            app.ClearAssignedDataButton.Layout.Column = 2;
+            app.ClearAssignedDataButton.Text = 'Clear Assigned Data';
 
             % Create MaterialsTab
             app.MaterialsTab = uitab(app.TabGroup);
@@ -1894,6 +2510,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create LoadButton_4
             app.LoadButton_4 = uibutton(app.GridLayout26, 'push');
+            app.LoadButton_4.ButtonPushedFcn = createCallbackFcn(app, @LoadButton_4Pushed, true);
             app.LoadButton_4.FontWeight = 'bold';
             app.LoadButton_4.Layout.Row = 1;
             app.LoadButton_4.Layout.Column = 3;
@@ -1947,6 +2564,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create LoadButton_3
             app.LoadButton_3 = uibutton(app.GridLayout22, 'push');
+            app.LoadButton_3.ButtonPushedFcn = createCallbackFcn(app, @LoadButton_3Pushed, true);
             app.LoadButton_3.Tag = 'ImageLoadButton';
             app.LoadButton_3.FontWeight = 'bold';
             app.LoadButton_3.Layout.Row = 1;
@@ -2009,6 +2627,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create LoadButton_2
             app.LoadButton_2 = uibutton(app.GridLayout23, 'push');
+            app.LoadButton_2.ButtonPushedFcn = createCallbackFcn(app, @LoadButton_2Pushed, true);
             app.LoadButton_2.Tag = 'CenterlineLoadButton';
             app.LoadButton_2.FontWeight = 'bold';
             app.LoadButton_2.Layout.Row = 1;
@@ -2180,6 +2799,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.UpdateFigureButton.BackgroundColor = [0.1608 0.6 0.2196];
             app.UpdateFigureButton.FontSize = 13;
             app.UpdateFigureButton.FontWeight = 'bold';
+            app.UpdateFigureButton.Enable = 'off';
             app.UpdateFigureButton.Layout.Row = 2;
             app.UpdateFigureButton.Layout.Column = 1;
             app.UpdateFigureButton.Text = 'Update Figure';
@@ -2190,21 +2810,16 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.ClearFigureButton.BackgroundColor = [0.9294 0.6941 0.1255];
             app.ClearFigureButton.FontSize = 13;
             app.ClearFigureButton.FontWeight = 'bold';
+            app.ClearFigureButton.Enable = 'off';
             app.ClearFigureButton.Layout.Row = 2;
             app.ClearFigureButton.Layout.Column = 2;
             app.ClearFigureButton.Text = 'Clear Figure';
-
-            % Create UniversityofTexasatDallasVascularMechanobiologyLabLabel
-            app.UniversityofTexasatDallasVascularMechanobiologyLabLabel = uilabel(app.UIFigure);
-            app.UniversityofTexasatDallasVascularMechanobiologyLabLabel.FontSize = 15;
-            app.UniversityofTexasatDallasVascularMechanobiologyLabLabel.Position = [373 609 206 34];
-            app.UniversityofTexasatDallasVascularMechanobiologyLabLabel.Text = {'University of Texas at Dallas'; 'Vascular Mechanobiology Lab'};
 
             % Create Label
             app.Label = uilabel(app.UIFigure);
             app.Label.Enable = 'off';
             app.Label.Visible = 'off';
-            app.Label.Position = [1 0 650 710];
+            app.Label.Position = [598 0 53 690];
             app.Label.Text = '';
 
             % Create ERRORPanel
@@ -2256,6 +2871,11 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.ReturnButton.Layout.Column = 3;
             app.ReturnButton.Text = 'Return';
 
+            % Create Image
+            app.Image = uiimage(app.UIFigure);
+            app.Image.Position = [11 590 290 90];
+            app.Image.ImageSource = 'Logo.png';
+
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
         end
@@ -2265,7 +2885,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = VHIVUSArteryMeshReconstructionApp
+        function app = VHIVUSArteryMeshReconstruction
 
             % Create UIFigure and components
             createComponents(app)
