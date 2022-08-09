@@ -17,17 +17,31 @@ Make a copy of the `config.template.ini` file and change the name to `config.ini
 The code can be operated 2 ways.
 1) Via the user interface (UI)
 - Run the `VHIVUSArteryMeshReconstructionApp.m` file in the `\scripts` folder.
+
 	![](./images/StartScreen.png)
+	
 - Three panels contain the buttons and input fields you can use to load, build, and plot your mesh.
+
 	![](./images/UIPanes.png)
+	
 - The Configuration File Manager panel is used to load configuration files for easy model building.
+
 	![](./images/ConfigurationLoading.png)
+	
 - The Meshing/FEBio Propertery Manager panel is used to control various VHIVUS, meshing, materials, and FEBio output parameters. These values are automatically filled in from a loaded configuration file.
+
 	![](./images/MeshingFEBioPropertyManager.png)
+	
 - The Plot Manager panel is used to control what is being plotted and plot settings. The plot is updated with these parametes when the `Update Figure` button is pressed. You may notice that some objects are disabled, these are automaticlaly enabled/disabled when they are created from the Meshing/FEBio Property Manager.
+
 	![](./images/PlotManager.png)
+	
 - Once satisfied with the mesh, you can output an FEBio .feb input file using the FEBio Tab in the Meshing/FEBio Property Manager.
+
 	![](./images/FEBioOutput.png)
 
 2) Scripting
 - Open the `IVUS_to_FEA.m` file in the `\scripts` folder. This script contains the same functions used in the UI to read the config files, generate the mesh, and output the FEBio .feb input file.
+
+## Data Usage
+An example VH-IVUS data set has been included for testing. **NOTE** These images are public data and do not contain any patient-specific information.
