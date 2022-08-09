@@ -3,9 +3,9 @@ function [cline] = getCenterline(mesh_config)
 if mesh_config.mesh.curvature == "straight"
     %% Create straight centerline
 
-    % Check if centerline path is defined, if so, use centerline coordinates to create 
-    % a straight centerline
+    % Check if centerline path is defined
     if isfile(mesh_config.cline_path)
+        % If so, use centerline coordinates to create a straight centerline
 
         % Read in points and interpolate
         line_p = readmatrix(mesh_config.cline_path);

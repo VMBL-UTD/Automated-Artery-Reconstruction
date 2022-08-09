@@ -6,7 +6,7 @@ end
 
 % Get the number of .tif files in VH-IVUS directory
 if isfolder(mesh_config.img_folder)
-    img_folder = dir([mesh_config.img_folder '/*.tif']);
+    img_folder = dir([mesh_config.img_folder]);
     mesh_config.img_folder_size = length(img_folder)-1;
 
     % Check if user wants to use all VH-IVUS images (ivus_min == -1)
