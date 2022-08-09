@@ -42,6 +42,12 @@ for img_i=mesh_config.ivus.min:mesh_config.ivus.max
     % get pixels of interest from image
     pixels = filterAndScaleImg(img,mesh_config);
     
+    % Check if pixels are empty
+    if isempty(pixels.type)
+        close(wb);
+        error("Empty image. Config colors may be incorrect.");
+    end
+    
     % Get the number of boundaries and sets of edges
     [e, v, edge_sets, numbounds, ~] = getNumBoundaries(pixels.cart,0.08);
 
