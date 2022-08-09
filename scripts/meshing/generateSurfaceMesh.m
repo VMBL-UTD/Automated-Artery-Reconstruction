@@ -42,5 +42,5 @@ optstruct.pointSpacing = mesh_config.mesh.resample;
 fprintf("\nRunning TetGen\n");
 minedgelen = mean(patchEdgeLengths(F,V));
 [tets] = customTETGEN(F,V,minedgelen);
-tets.surfs = separateMeshSurfacesNew(F,V,outlet_vecs.xyz,outlet_vecs.uvw,0.15);
+tets.surfs = separateMeshSurfacesNew(F,V,outlet_vecs.xyz,outlet_vecs.uvw,mesh_config.mesh.resample/2);
 end
