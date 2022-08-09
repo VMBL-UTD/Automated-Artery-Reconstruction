@@ -31,3 +31,6 @@ The code can be operated 2 ways.
 
 2) Scripting
 - Open the `IVUS_to_FEA.m` file in the `\scripts` folder. This script contains the same functions used in the UI to read the config files, generate the mesh, and output the FEBio .feb input file.
+
+## Data Usage
+An example VH-IVUS data set has been included for testing. **NOTE** These images are public data and do not contain any patient-specific information.
