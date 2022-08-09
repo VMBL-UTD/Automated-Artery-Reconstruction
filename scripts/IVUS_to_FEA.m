@@ -31,4 +31,3 @@ fprintf("\nAssigning Materials to %d Elements\n",length(tets.elements));
 %% Write .feb file
 fprintf('\nWriting .feb file\n');
 febio_feb = generateFEbioInputFile(F, tets.surfs, tets, mesh_config, feb_config);
-
