@@ -14,9 +14,9 @@ profiles_out = profiles_in;
 pixels_out = pixels_in;
 
 % check if user wants sleeve layers or not
-if mesh_config.mesh.sleeve_thick > 0
+if mesh_config.ivus.sleeve_thick > 0
     % create new outer profile
-    profiles_out.outer.pol = [profiles_in.outer.pol(:,1), profiles_in.outer.pol(:,2)+mesh_config.mesh.sleeve_thick];
+    profiles_out.outer.pol = [profiles_in.outer.pol(:,1), profiles_in.outer.pol(:,2)+mesh_config.ivus.sleeve_thick];
     profiles_out.outer.cart = zeros(length(profiles_out.outer.pol),2);
     [profiles_out.outer.cart(:,1), profiles_out.outer.cart(:,2)] = pol2cart(profiles_out.outer.pol(:,1),profiles_out.outer.pol(:,2));
 

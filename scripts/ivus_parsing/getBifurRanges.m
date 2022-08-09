@@ -3,7 +3,6 @@ num_rays = length(ray_hits);
 
 % Get logical array where 1 = hit, 0 = no hit
 empty_rays = distances ~= 0;
-% plot(linspace(pi,-pi,num_rays),empty_rays); xlim([-pi pi]);
 
 % Starting with the first index where a ray was hit, circle around
 % to get ranges where bifurcation is not present

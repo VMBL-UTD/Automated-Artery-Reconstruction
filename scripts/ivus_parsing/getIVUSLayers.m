@@ -15,12 +15,29 @@ layer_ind = 1;
 % Setup waitbar
 wb = waitbar(1/mesh_config.num_layers,'Reading Images...');
 
+% Load all file information within the directory
+fnames_in_dir = string({dir([mesh_config.img_folder]).name});
+
 for img_i=mesh_config.ivus.min:mesh_config.ivus.max
     % update wait bar
     waitbar(layer_ind/mesh_config.num_layers,wb,['Reading Images...',num2str(layer_ind),'/',num2str(mesh_config.num_layers)]);
     
     % read image
-    img = imread(fullfile(mesh_config.img_folder, sprintf('%d.tif',img_i)));
+    [fname,ext] = getMatchingFileName(fnames_in_dir,img_i);
+    if strcmp(ext,'.gif')
+        % .gif files do weird things when read with imread...
+        % https://www.mathworks.com/matlabcentral/answers/36160-displaying-gif-image-matlab
+        [img_temp,cmap] = imread(fullfile(mesh_config.img_folder,fname));
+        img = zeros(size(img_temp,1),size(img_temp,2),3);
+        for i=1:size(img_temp,1)
+            for j=1:size(img_temp,2)
+                img(i,j,:) = cmap(img_temp(i,j)+1,:)*255;
+            end
+        end
+    else
+        img = imread(fullfile(mesh_config.img_folder,fname));
+        img = img(:,:,1:3);
+    end
     
     % get pixels of interest from image
     pixels = filterAndScaleImg(img,mesh_config);
@@ -37,9 +54,6 @@ for img_i=mesh_config.ivus.min:mesh_config.ivus.max
     % Get inner and outer profiles
     [profiles] = getProfiles(distances, near_coords, far_coords);
 
-    % split arterial pixels into medial and adventitial layers
-%     pixels = splitArterial(pixels,profiles,opts);
-    
     % create sleeve points and adjust outer_profile accordingly
     [pixels, profiles] = generateSleevePoints(pixels, profiles, mesh_config);
     
@@ -92,4 +106,16 @@ end
 % Close the waitbar
 close(wb);
 
+end
+
+
+function [fname,ext] = getMatchingFileName(fnames_in_dir, req_ind)
+fname = "";
+for i=1:length(fnames_in_dir)
+    [~,name,ext] = fileparts(fnames_in_dir(i));
+    if str2double(name) == req_ind
+        fname = strcat(name,ext);
+        break;
+    end
+end
 end
