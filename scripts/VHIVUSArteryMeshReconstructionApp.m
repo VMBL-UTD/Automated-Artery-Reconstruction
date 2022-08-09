@@ -1,4 +1,4 @@
-classdef VHIVUSArteryMeshReconstruction < matlab.apps.AppBase
+classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
@@ -2885,7 +2885,7 @@ classdef VHIVUSArteryMeshReconstruction < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = VHIVUSArteryMeshReconstruction
+        function app = VHIVUSArteryMeshReconstructionApp
 
             % Create UIFigure and components
             createComponents(app)
