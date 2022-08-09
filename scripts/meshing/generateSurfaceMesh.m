@@ -25,10 +25,10 @@ end
 
 % Smooth Geometry and Flatten End Caps
 fprintf('\nSmoothing Initial Geometry\n');
-cPar.Method = 'HC';                     % Using Humphrey smoothing algorithm
-cPar.n=8;                               % Number of iterations
-cPar.LambdaSmooth = 0.8;                % Lambda value for smoothing
-[Vt] = patchSmooth(F,V, [], cPar);      % Smooth geometry
+cPar.Method = 'HC';                                 % Using Humphrey smoothing algorithm
+cPar.n=mesh_config.mesh.smooth_n;                   % Number of iterations
+cPar.LambdaSmooth = mesh_config.mesh.smooth_lambda; % Lambda value for smoothing
+[Vt] = patchSmooth(F,V, [], cPar);                  % Smooth geometry
 Vt(surfs.caps{1,1}.V,:) = V(surfs.caps{1,1}.V,:);
 Ft = F;
 clear cPar

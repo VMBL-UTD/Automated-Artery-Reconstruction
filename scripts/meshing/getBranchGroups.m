@@ -178,17 +178,6 @@ for i=1:num_branches
     bg(i).mid_uvw = mid_uvw;
     bg(i).mid_xyz = mid_xyz + inoutdist*mid_uvw;
 end
-%     for i=1:size(branch_groups,1)
-%     gpatch(F(branch_groups(i).inner.f_ind,:),V,'r');
-%     gpatch(F(branch_groups(i).outer.f_ind,:),V,'b');
-%     
-%     plot3(branch_groups(i).inner.loft_profile(:,1), branch_groups(i).inner.loft_profile(:,2), branch_groups(i).inner.loft_profile(:,3),'b','LineWidth',2);
-%     plot3(branch_groups(i).outer.loft_profile(:,1), branch_groups(i).outer.loft_profile(:,2), branch_groups(i).outer.loft_profile(:,3),'bo');
-%     
-%     plot3(branch_groups(i).proj_inner(:,1),branch_groups(i).proj_inner(:,2),branch_groups(i).proj_inner(:,3),'r','LineWidth',2);
-%     plot3(V(branch_groups(i).inner_profile,1), V(branch_groups(i).inner_profile,2), V(branch_groups(i).inner_profile,3),'ro');
-%     daspect([1 1 1]); xlabel('X'); ylabel('Y'); zlabel('Z');
-%     end
 end
 
 
@@ -222,9 +211,6 @@ function [pout] = widenOpening(pin, dist)
     
     % Widen pin using vectors to com
     pout = pin + pnorm.*dist;
-    
-%     hold on; plot3(pout(:,1), pout(:,2), pout(:,3), 'r');
-%     hold on; plot3(pc(1), pc(2), pc(3), 'c')
 end
 
 
@@ -349,8 +335,6 @@ for i=1:numiter
     end
     Vout = Vtemp;
 end
-% plot3(Vin(profile,1),Vin(profile,2),Vin(profile,3),'r-');
-% hold on; plot3(Vtemp(profile,1),Vtemp(profile,2),Vtemp(profile,3),'b-');
 end
 
 
