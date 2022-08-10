@@ -651,7 +651,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             
             % Plot volumetric mesh
             if app.VolumetricMeshButton.Value
-                plotTetMesh(app.tets,20,0,0);
+                plotTetMesh(app.tets,app.mesh_config,20,0,0);
             end
             
             % Plot Centerline
