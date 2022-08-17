@@ -95,6 +95,11 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         GridLayout64                    matlab.ui.container.GridLayout
         SmoothingStepsEditFieldLabel    matlab.ui.control.Label
         SmoothingStepsEditField         matlab.ui.control.NumericEditField
+        GridLayout68                    matlab.ui.container.GridLayout
+        ElementShapeLabel               matlab.ui.control.Label
+        ButtonGroup_6                   matlab.ui.container.ButtonGroup
+        tet4Button                      matlab.ui.control.ToggleButton
+        tet10Button                     matlab.ui.control.ToggleButton
         MaterialAssignmentPanel         matlab.ui.container.Panel
         GridLayout65                    matlab.ui.container.GridLayout
         GridLayout66                    matlab.ui.container.GridLayout
@@ -238,8 +243,8 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
         is_branched;
         
         % Config Structs
-        mesh_config;
-        feb_config;
+        mesh_config;% = meshConfigBase();
+        feb_config;% = febConfigBase();
         
         % Plotting
         cline_loaded = false;
@@ -290,6 +295,15 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             else
                 app.YesButton.Value = 0;
                 app.NoButton.Value = 1;
+            end
+            
+            % Update element shape
+            if strcmp(app.mesh_config.mesh.element_type,"tet4")
+                app.tet4Button.Value = 1;
+                app.tet10Button.Value = 0;
+            else
+                app.tet4Button.Value = 0;
+                app.tet10Button.Value = 1;
             end
         end
         
@@ -417,7 +431,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.feb_config = febConfigBase();
             
             app.setVHIVUSColors();
-            
+
         end
 
         % Button pushed function: SelectFromFileExplorerButton_3
@@ -602,6 +616,8 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
                         app.MaxVHIVUSIDEditField.Enable = true;
                         app.PixelmmScaleFactorEditField.Enable = true;
                         app.ParseImagesButton.Enable = true;
+                        
+                        app.displayErrorMessage(e);
                         return;
                     end
                     
@@ -651,7 +667,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             
             % Plot volumetric mesh
             if app.VolumetricMeshButton.Value
-                plotTetMesh(app.tets,app.mesh_config,20,0,0);
+                plotTetMesh(app.tets,20,0,0);
             end
             
             % Plot Centerline
@@ -796,8 +812,6 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.feb_config.mats.necrotic.E      = app.YoungsModulusEditField_5.Value;
             app.feb_config.mats.necrotic.v      = app.PoissonsRatioEditField_5.Value;
             
-            % Check if all values are valid and enable the "Generate FEBio File" button if they
-            
         end
 
         % Button pushed function: ClearCenterlineDataButton
@@ -844,11 +858,10 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             end
         end
 
-        % Callback function: ButtonGroup_3, ButtonGroup_4, 
-        % ButtonGroup_5, CenterlineFilePathEditField, 
-        % MaxVHIVUSIDEditField, MinVHIVUSIDEditField, 
-        % PixelmmScaleFactorEditField, SleeveThicknessmmEditField, 
-        % VHIVUSDirectoryEditField
+        % Callback function: ButtonGroup_3, 
+        % CenterlineFilePathEditField, MaxVHIVUSIDEditField, 
+        % MinVHIVUSIDEditField, PixelmmScaleFactorEditField, 
+        % SleeveThicknessmmEditField, VHIVUSDirectoryEditField
         function VHIVUSConfigPropertyValueChanged(app, event)
             
             % Update mesh_config centerline path
@@ -886,6 +899,9 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.mesh_config.ivus.max = app.MaxVHIVUSIDEditField.Value;
             app.mesh_config.ivus.pixel_scale = app.PixelmmScaleFactorEditField.Value;
             app.mesh_config.ivus.sleeve_thick = app.SleeveThicknessmmEditField.Value;
+            
+            % Update branching parameters
+            app.mesh_config.mesh.branch
             
             % Update IVUS image range
             app.mesh_config = getIVUSRange(app.mesh_config);
@@ -996,7 +1012,8 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.setVHIVUSColors();
         end
 
-        % Callback function: MeshResolutionmmEditField, 
+        % Callback function: ButtonGroup_4, ButtonGroup_5, 
+        % ButtonGroup_6, MeshResolutionmmEditField, 
         % SmoothingLambdaEditField, SmoothingStepsEditField, 
         % UIFigure
         function MeshingConfigPropertyValueChanged(app, event)
@@ -1006,15 +1023,25 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.mesh_config.mesh.smooth_lambda = app.SmoothingLambdaEditField.Value;
             app.mesh_config.mesh.smooth_n = app.SmoothingStepsEditField.Value;
             
-            if app.CircularButton.Value == 1
+            % Update branch shape property
+            if app.CircularButton.Value
                 app.mesh_config.mesh.branch_ideal = 1;
             else
                 app.mesh_config.mesh.branch_ideal = 0;
             end
-            if app.YesButton.Value == 1
+            
+            % Update branch taper property
+            if app.YesButton.Value
                 app.mesh_config.mesh.branch_taper = 1;
             else
                 app.mesh_config.mesh.branch_taper = 0;
+            end
+            
+            % Update element shape
+            if app.tet4Button.Value
+                app.mesh_config.mesh.element_type = "tet4";
+            else
+                app.mesh_config.mesh.element_type = "tet10";
             end
         end
 
@@ -1661,12 +1688,12 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.MeshingPanel.FontWeight = 'bold';
             app.MeshingPanel.Scrollable = 'on';
             app.MeshingPanel.FontSize = 13;
-            app.MeshingPanel.Position = [9 305 290 188];
+            app.MeshingPanel.Position = [11 285 290 208];
 
             % Create GridLayout2
             app.GridLayout2 = uigridlayout(app.MeshingPanel);
             app.GridLayout2.ColumnWidth = {'1x'};
-            app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x'};
+            app.GridLayout2.RowHeight = {'1x', '1x', '1x', '1x', '1x', '1x', '1x'};
             app.GridLayout2.ColumnSpacing = 5;
             app.GridLayout2.RowSpacing = 2;
             app.GridLayout2.Padding = [5 5 5 5];
@@ -1716,7 +1743,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create ButtonGroup_4
             app.ButtonGroup_4 = uibuttongroup(app.GridLayout7);
-            app.ButtonGroup_4.SelectionChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
+            app.ButtonGroup_4.SelectionChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
             app.ButtonGroup_4.BorderType = 'none';
             app.ButtonGroup_4.BackgroundColor = [0.8 0.8 0.8];
             app.ButtonGroup_4.Layout.Row = 1;
@@ -1725,13 +1752,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create CircularButton
             app.CircularButton = uitogglebutton(app.ButtonGroup_4);
             app.CircularButton.Text = 'Circular';
-            app.CircularButton.Position = [1 1 50 22];
+            app.CircularButton.Position = [1 0 50 22];
             app.CircularButton.Value = true;
 
             % Create NaturalButton
             app.NaturalButton = uitogglebutton(app.ButtonGroup_4);
             app.NaturalButton.Text = 'Natural';
-            app.NaturalButton.Position = [61 1 50 22];
+            app.NaturalButton.Position = [61 0 50 22];
 
             % Create GridLayout8
             app.GridLayout8 = uigridlayout(app.GridLayout2);
@@ -1752,7 +1779,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
 
             % Create ButtonGroup_5
             app.ButtonGroup_5 = uibuttongroup(app.GridLayout8);
-            app.ButtonGroup_5.SelectionChangedFcn = createCallbackFcn(app, @VHIVUSConfigPropertyValueChanged, true);
+            app.ButtonGroup_5.SelectionChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
             app.ButtonGroup_5.BorderType = 'none';
             app.ButtonGroup_5.BackgroundColor = [0.8 0.8 0.8];
             app.ButtonGroup_5.Layout.Row = 1;
@@ -1761,13 +1788,13 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             % Create YesButton
             app.YesButton = uitogglebutton(app.ButtonGroup_5);
             app.YesButton.Text = 'Yes';
-            app.YesButton.Position = [1 1 50 22];
+            app.YesButton.Position = [1 0 50 22];
             app.YesButton.Value = true;
 
             % Create NoButton
             app.NoButton = uitogglebutton(app.ButtonGroup_5);
             app.NoButton.Text = 'No';
-            app.NoButton.Position = [61 1 50 22];
+            app.NoButton.Position = [61 0 50 22];
 
             % Create GridLayout47
             app.GridLayout47 = uigridlayout(app.GridLayout2);
@@ -1775,7 +1802,7 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.GridLayout47.ColumnSpacing = 5;
             app.GridLayout47.RowSpacing = 0;
             app.GridLayout47.Padding = [0 0 0 0];
-            app.GridLayout47.Layout.Row = 6;
+            app.GridLayout47.Layout.Row = 7;
             app.GridLayout47.Layout.Column = 1;
 
             % Create GenerateMeshButton
@@ -1851,13 +1878,49 @@ classdef VHIVUSArteryMeshReconstructionApp < matlab.apps.AppBase
             app.SmoothingStepsEditField.Layout.Column = 2;
             app.SmoothingStepsEditField.Value = 8;
 
+            % Create GridLayout68
+            app.GridLayout68 = uigridlayout(app.GridLayout2);
+            app.GridLayout68.ColumnWidth = {'1x', '0.75x'};
+            app.GridLayout68.RowHeight = {'1x'};
+            app.GridLayout68.ColumnSpacing = 5;
+            app.GridLayout68.RowSpacing = 5;
+            app.GridLayout68.Padding = [5 0 5 0];
+            app.GridLayout68.Layout.Row = 6;
+            app.GridLayout68.Layout.Column = 1;
+
+            % Create ElementShapeLabel
+            app.ElementShapeLabel = uilabel(app.GridLayout68);
+            app.ElementShapeLabel.HorizontalAlignment = 'center';
+            app.ElementShapeLabel.Layout.Row = 1;
+            app.ElementShapeLabel.Layout.Column = 1;
+            app.ElementShapeLabel.Text = 'Element Shape';
+
+            % Create ButtonGroup_6
+            app.ButtonGroup_6 = uibuttongroup(app.GridLayout68);
+            app.ButtonGroup_6.SelectionChangedFcn = createCallbackFcn(app, @MeshingConfigPropertyValueChanged, true);
+            app.ButtonGroup_6.BorderType = 'none';
+            app.ButtonGroup_6.BackgroundColor = [0.8 0.8 0.8];
+            app.ButtonGroup_6.Layout.Row = 1;
+            app.ButtonGroup_6.Layout.Column = 2;
+
+            % Create tet4Button
+            app.tet4Button = uitogglebutton(app.ButtonGroup_6);
+            app.tet4Button.Text = 'tet4';
+            app.tet4Button.Position = [1 0 50 22];
+            app.tet4Button.Value = true;
+
+            % Create tet10Button
+            app.tet10Button = uitogglebutton(app.ButtonGroup_6);
+            app.tet10Button.Text = 'tet10';
+            app.tet10Button.Position = [61 0 50 22];
+
             % Create MaterialAssignmentPanel
             app.MaterialAssignmentPanel = uipanel(app.MeshingTab);
             app.MaterialAssignmentPanel.Title = 'Material Assignment';
             app.MaterialAssignmentPanel.BackgroundColor = [0.8 0.8 0.8];
             app.MaterialAssignmentPanel.FontWeight = 'bold';
             app.MaterialAssignmentPanel.FontSize = 13;
-            app.MaterialAssignmentPanel.Position = [11 195 290 90];
+            app.MaterialAssignmentPanel.Position = [11 185 290 90];
 
             % Create GridLayout65
             app.GridLayout65 = uigridlayout(app.MaterialAssignmentPanel);
