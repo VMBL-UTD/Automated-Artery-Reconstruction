@@ -3,7 +3,7 @@ function [mesh_config, feb_config] = parseSingleConfig(fname)
 % Read in file
 ini = ini2struct(fname);
 
-% Get generic mesh_config object;
+% Get generic mesh_config and feb_config objects
 mesh_config = meshConfigBase();
 feb_config = febConfigBase();
 
@@ -31,6 +31,7 @@ mesh_config.mesh.branch_taper   = ini.PROPERTIES_MESH.branch_taper;
 mesh_config.mesh.branch_ideal   = ini.PROPERTIES_MESH.branch_ideal;
 mesh_config.mesh.smooth_lambda  = ini.PROPERTIES_MESH.smooth_lambda;
 mesh_config.mesh.smooth_n       = ini.PROPERTIES_MESH.smooth_n;
+mesh_config.mesh.element_type   = ini.PROPERTIES_MESH.element_type;
 
 % Get FEBio properties
 feb_config.feb.filename         = ini.PROPERTIES_FEBIO.feb_filename;

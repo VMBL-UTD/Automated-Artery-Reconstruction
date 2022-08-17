@@ -1,6 +1,6 @@
 function [cline] = getCenterline(mesh_config)
 
-if mesh_config.mesh.curvature == "straight"
+if strcmp(mesh_config.mesh.curvature,"straight")
     %% Create straight centerline
 
     % Check if centerline path is defined
@@ -16,7 +16,11 @@ if mesh_config.mesh.curvature == "straight"
         cline = zeros(mesh_config.num_layers,3);
         cind = 1;
         for i=mesh_config.ivus.min:mesh_config.ivus.max
-            cline(cind,1) = norm(line_p(i,:)-line_p(i-1,:)) + cline(i-1,1);
+            if cind>1
+                cline(cind,1) = norm(line_p(i,:)-line_p(i-1,:)) + cline(cind-1,1);
+            else
+                cline(cind,1) = norm(line_p(i,:)-line_p(i-1,:));
+            end
             cind = cind+1;
         end
 

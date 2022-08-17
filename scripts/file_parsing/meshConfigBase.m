@@ -17,12 +17,15 @@ mesh_config.ivus.necrotic.c     = [255 0   0  ];
 mesh_config.ivus.fibrotic.c     = [0   170 0  ];
 mesh_config.ivus.fibrofatty.c   = [186 255 0  ];
 mesh_config.ivus.sleeve.c       = [0   0   255];
+mesh_config.ivus.sleeve_thick   = 0.2;
 
 mesh_config.mesh.curvature      = "straight";
 mesh_config.mesh.resample       = 0.2;
-mesh_config.mesh.sleeve_thick   = 0;
 mesh_config.mesh.branch_taper   = 1;
 mesh_config.mesh.branch_ideal   = 1;
+mesh_config.mesh.smooth_lambda  = 0.8;
+mesh_config.mesh.smooth_n       = 8;
+mesh_config.mesh.element_type   = "tet4";
 
 mesh_config.mats.artery.id      = 1;
 mesh_config.mats.calcium.id     = 2;

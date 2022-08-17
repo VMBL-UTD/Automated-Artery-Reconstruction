@@ -3,7 +3,7 @@ function [mesh_config] = parseMeshConfig(fname)
 % Read in file
 ini = ini2struct(fname);
 
-% Create struct
+% Get generic mesh_config object
 mesh_config = meshConfigBase();
 
 % Get paths and directories
@@ -27,6 +27,9 @@ mesh_config.mesh.curvature      = ini.PROPERTIES_MESH.curvature;
 mesh_config.mesh.resample       = ini.PROPERTIES_MESH.resample_mm;
 mesh_config.mesh.branch_taper   = ini.PROPERTIES_MESH.branch_taper;
 mesh_config.mesh.branch_ideal   = ini.PROPERTIES_MESH.branch_ideal;
+mesh_config.mesh.smooth_lambda  = ini.PROPERTIES_MESH.smooth_lambda;
+mesh_config.mesh.smooth_n       = ini.PROPERTIES_MESH.smooth_n;
+mesh_config.mesh.element_type   = ini.PROPERTIES_MESH.element_type;
 
 % Set material ids for meshing
 mesh_config.mats.artery.id      = 1;
