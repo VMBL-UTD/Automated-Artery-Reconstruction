@@ -41,6 +41,6 @@ optstruct.pointSpacing = mesh_config.mesh.resample;
 % Tetrahedralize mesh
 fprintf("\nRunning TetGen\n");
 minedgelen = mean(patchEdgeLengths(F,V));
-[tets] = customTETGEN(F,V,minedgelen);
+[tets] = customTETGEN(F,V,minedgelen,mesh_config);
 tets.surfs = separateMeshSurfacesNew(F,V,outlet_vecs.xyz,outlet_vecs.uvw,mesh_config.mesh.resample/2);
 end

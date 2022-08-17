@@ -16,7 +16,7 @@ Outputs:
         tets.faceMaterialID -> material IDs for each tet face
         tets.loadNameStruct -> residual directories where TETGEN originally stored the outputs
 %}
-function [tets] = customTETGEN(F,V,edgeLen)
+function [tets] = customTETGEN(F,V,edgeLen,mesh_config)
 s = sprintf('-pqa%.8fYQ',edgeLen^3/(6*sqrt(2))); % Calculate optimal tetrahedral volume using edge length
 inputStruct.Faces=F;
 inputStruct.Nodes=V;
@@ -24,6 +24,9 @@ inputStruct.holePoints=[];
 inputStruct.faceBoundaryMarker=ones(size(F,1),1); %Face boundary markers
 inputStruct.regionPoints=[]; %region points
 inputStruct.stringOpt=s;
+if strcmp(mesh_config.mesh.element_type,"tet10")
+    inputStruct.tetType = 'tet10';
+end
 [tets]=runTetGen(inputStruct); %Run tetGen
 
 tets.element_centers  = getCentroids(tets.nodes, tets.elements);   % compute centroids of elements
