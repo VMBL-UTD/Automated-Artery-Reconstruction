@@ -42,12 +42,6 @@ for img_i=mesh_config.ivus.min:mesh_config.ivus.max
     % get pixels of interest from image
     pixels = filterAndScaleImg(img,mesh_config);
     
-    % Check if pixels are empty
-    if isempty(pixels.type)
-        close(wb);
-        error("Empty image. Config colors may be incorrect.");
-    end
-    
     % Get the number of boundaries and sets of edges
     [e, v, edge_sets, numbounds, ~] = getNumBoundaries(pixels.cart,0.08);
 
@@ -60,6 +54,9 @@ for img_i=mesh_config.ivus.min:mesh_config.ivus.max
     % Get inner and outer profiles
     [profiles] = getProfiles(distances, near_coords, far_coords);
 
+    % split arterial pixels into medial and adventitial layers
+%     pixels = splitArterial(pixels,profiles,opts);
+    
     % create sleeve points and adjust outer_profile accordingly
     [pixels, profiles] = generateSleevePoints(pixels, profiles, mesh_config);
     

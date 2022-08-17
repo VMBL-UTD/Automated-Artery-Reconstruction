@@ -15,11 +15,13 @@ if strcmp(mesh_config.mesh.curvature,"straight")
         % Create straight centerline coordinates
         cline = zeros(mesh_config.num_layers,3);
         cind = 1;
-        for i=mesh_config.ivus.min:mesh_config.ivus.max
+        for i=mesh_config.ivus.min+1:mesh_config.ivus.max+1
             if cind>1
+                % All others
                 cline(cind,1) = norm(line_p(i,:)-line_p(i-1,:)) + cline(cind-1,1);
             else
-                cline(cind,1) = norm(line_p(i,:)-line_p(i-1,:));
+                % First index
+                cline(cind,1) = norm(line_p(i+1,:)-line_p(i,:));
             end
             cind = cind+1;
         end
